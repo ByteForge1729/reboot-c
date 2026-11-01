@@ -1,0 +1,55 @@
+{
+  "id": "m7-b1",
+  "title": "Fuel Transfer",
+  "difficulty": "easy",
+  "story": "Moving fuel between tanks: write `void transfer(int *from, int *to, int amount)`. It moves `amount` litres from one tank to the other, but **never more than the source tank holds**.\n\nInput: `A B T`: tank A's litres, tank B's litres, and how much to move from A to B (all 0–1000000).\n\nOutput: `A B` after the transfer.\n\nExample: `50 10 20` prints `30 30`; `5 0 10` prints `0 5`.",
+  "starter": "#include <stdio.h>\n\nvoid transfer(int *from, int *to, int amount) {\n    // move fuel through the pointers\n}\n\nint main(void) {\n    int a, b, t;\n    scanf(\"%d %d %d\", &a, &b, &t);\n    transfer(&a, &b, t);\n    printf(\"%d %d\\n\", a, b);\n    return 0;\n}\n",
+  "tests": [
+    {
+      "stdin": "50 10 20\n",
+      "expected": "30 30\n",
+      "visible": true
+    },
+    {
+      "stdin": "5 0 10\n",
+      "expected": "0 5\n",
+      "visible": true
+    },
+    {
+      "stdin": "0 0 5\n",
+      "expected": "0 0\n",
+      "visible": true
+    },
+    {
+      "stdin": "100 100 0\n",
+      "expected": "100 100\n",
+      "visible": false
+    },
+    {
+      "stdin": "7 3 7\n",
+      "expected": "0 10\n",
+      "visible": false
+    },
+    {
+      "stdin": "1000 1 999\n",
+      "expected": "1 1000\n",
+      "visible": false
+    },
+    {
+      "stdin": "20 5 25\n",
+      "expected": "0 25\n",
+      "visible": false
+    },
+    {
+      "stdin": "9 9 3\n",
+      "expected": "6 12\n",
+      "visible": false
+    }
+  ],
+  "hints": [
+    "`*from` is tank A's level and `*to` is tank B's. Change them through the pointers.",
+    "Work out how much really moves first: the smaller of `amount` and `*from`.",
+    "`int moved = amount < *from ? amount : *from;` then `*from -= moved; *to += moved;`"
+  ],
+  "solution": "#include <stdio.h>\n\nvoid transfer(int *from, int *to, int amount) {\n    int moved = amount < *from ? amount : *from;\n    *from -= moved;\n    *to += moved;\n}\n\nint main(void) {\n    int a, b, t;\n    scanf(\"%d %d %d\", &a, &b, &t);\n    transfer(&a, &b, t);\n    printf(\"%d %d\\n\", a, b);\n    return 0;\n}\n"
+}

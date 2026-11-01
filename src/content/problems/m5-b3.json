@@ -1,0 +1,55 @@
+{
+  "id": "m5-b3",
+  "title": "Drone Homing Steps",
+  "difficulty": "hard",
+  "story": "Lost drones home in with a strange rule. From position `n`: if n is even, go to `n / 2`; if it's odd, go to `3n + 1`. Repeat until reaching 1.\n\nInput: one whole number `n` (1 ≤ n ≤ 1000000).\n\nOutput: how many steps it takes to reach 1 (0 if it starts at 1).\n\nExample: `6` takes 8 steps: 6 → 3 → 10 → 5 → 16 → 8 → 4 → 2 → 1.",
+  "starter": "#include <stdio.h>\n\nint main(void) {\n    int n;\n    scanf(\"%d\", &n);\n    // count the steps to reach 1\n    return 0;\n}\n",
+  "tests": [
+    {
+      "stdin": "6\n",
+      "expected": "8\n",
+      "visible": true
+    },
+    {
+      "stdin": "1\n",
+      "expected": "0\n",
+      "visible": true
+    },
+    {
+      "stdin": "7\n",
+      "expected": "16\n",
+      "visible": true
+    },
+    {
+      "stdin": "27\n",
+      "expected": "111\n",
+      "visible": false
+    },
+    {
+      "stdin": "97\n",
+      "expected": "118\n",
+      "visible": false
+    },
+    {
+      "stdin": "837799\n",
+      "expected": "524\n",
+      "visible": false
+    },
+    {
+      "stdin": "704511\n",
+      "expected": "242\n",
+      "visible": false
+    },
+    {
+      "stdin": "2\n",
+      "expected": "1\n",
+      "visible": false
+    }
+  ],
+  "hints": [
+    "Loop while the position isn't 1, apply the rule, and count each step.",
+    "Some starting points climb very high before coming down: past what an `int` can hold.",
+    "Keep the position in a `long long` (and read it with `%lld`, or copy the int into one)."
+  ],
+  "solution": "#include <stdio.h>\n\nint main(void) {\n    long long n;\n    scanf(\"%lld\", &n);\n    int steps = 0;\n    while (n != 1) {\n        if (n % 2 == 0) {\n            n = n / 2;\n        } else {\n            n = 3 * n + 1;\n        }\n        steps++;\n    }\n    printf(\"%d\\n\", steps);\n    return 0;\n}\n"
+}

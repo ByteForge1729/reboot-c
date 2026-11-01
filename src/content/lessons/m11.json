@@ -1,0 +1,313 @@
+{
+ "missionId": 11,
+ "cheatsheet": "**Handlers** (`<signal.h>`)\n`void on_sig(int sig) { flag = 1; }` · `signal(SIGUSR1, on_sig);` · keep handlers tiny\n\n**Shared flag**\n`volatile sig_atomic_t flag = 0;`\n\n**Sending**\n`raise(SIGUSR1);` sends to yourself now · `alarm(n)` sends SIGALRM in n seconds (`<unistd.h>`) · `pause()` waits\n\n**sigaction**\n`struct sigaction sa; memset(&sa, 0, sizeof sa); sa.sa_handler = on_sig; sigemptyset(&sa.sa_mask); sigaction(SIGINT, &sa, NULL);`\n\n**Ignore, default, block**\n`SIG_IGN` · `SIG_DFL` · `sigprocmask(SIG_BLOCK, &set, NULL)`: blocked signals wait as pending, once each",
+ "lessons": [
+  {
+   "id": "m11-l1",
+   "title": "Signals: tapping a program on the shoulder",
+   "concept": "A **signal** interrupts a program whatever it's doing. Ctrl+C sends `SIGINT`; `SIGUSR1` and `SIGUSR2` are free for your own use. Most signals' default action is to **kill** the program.\n\n`signal(SIGUSR1, on_alarm);` installs a **handler**: a function C calls the moment that signal arrives. `raise(SIGUSR1)` sends one to yourself, right now.\n\nA handler can interrupt main between any two steps, so keep it tiny: change a `volatile sig_atomic_t` flag or counter and return. main does the printing.",
+   "example": {
+    "source": "#include <stdio.h>\n#include <signal.h>\n\nvolatile sig_atomic_t alarms = 0;\n\nvoid on_alarm(int sig) {\n    (void)sig;\n    alarms++;\n}\n\nint main(void) {\n    signal(SIGUSR1, on_alarm);\n    raise(SIGUSR1);\n    raise(SIGUSR1);\n    raise(SIGUSR1);\n    printf(\"caught %d alarms\\n\", (int)alarms);\n    return 0;\n}\n",
+    "stdin": ""
+   },
+   "predict": {
+    "id": "m11-p1",
+    "kind": "predict",
+    "prompt": "Before you run it: type what it prints.",
+    "code": "#include <stdio.h>\n#include <signal.h>\n\nvolatile sig_atomic_t alarms = 0;\n\nvoid on_alarm(int sig) {\n    (void)sig;\n    alarms++;\n}\n\nint main(void) {\n    signal(SIGUSR1, on_alarm);\n    raise(SIGUSR1);\n    raise(SIGUSR1);\n    raise(SIGUSR1);\n    printf(\"caught %d alarms\\n\", (int)alarms);\n    return 0;\n}\n",
+    "answer": "caught 3 alarms\n",
+    "explain": "raise runs the handler straight away, three times. `(int)` turns the sig_atomic_t into a plain int for printf.",
+    "warmupEligible": false
+   },
+   "drills": [
+    {
+     "id": "m11-d1",
+     "kind": "predict",
+     "prompt": "A program raises SIGUSR1 but never installed a handler for it. What happens?",
+     "code": "raise(SIGUSR1);",
+     "options": [
+      "The program is killed: that's SIGUSR1's default action",
+      "Nothing, the signal is ignored",
+      "raise returns an error",
+      "It waits until a handler appears"
+     ],
+     "answer": "The program is killed: that's SIGUSR1's default action",
+     "explain": "Without a handler, the default action runs, and for most signals that's \"terminate\"."
+    },
+    {
+     "id": "m11-d2",
+     "kind": "fix",
+     "prompt": "This should raise SIGUSR1 `n` times and report how many it caught, but it dies instead. Fix it.",
+     "code": "#include <stdio.h>\n#include <signal.h>\n\nvolatile sig_atomic_t count = 0;\n\nvoid on_usr1(int sig) {\n    (void)sig;\n    count++;\n}\n\nint main(void) {\n    int n;\n    scanf(\"%d\", &n);\n    for (int i = 0; i < n; i++) raise(SIGUSR1);\n    signal(SIGUSR1, on_usr1);\n    printf(\"caught %d\\n\", (int)count);\n    return 0;\n}\n",
+     "tests": [
+      {
+       "stdin": "3\n",
+       "expected": "caught 3\n",
+       "visible": true
+      },
+      {
+       "stdin": "1\n",
+       "expected": "caught 1\n",
+       "visible": true
+      },
+      {
+       "stdin": "0\n",
+       "expected": "caught 0\n",
+       "visible": false
+      },
+      {
+       "stdin": "5\n",
+       "expected": "caught 5\n",
+       "visible": false
+      }
+     ],
+     "solution": "#include <stdio.h>\n#include <signal.h>\n\nvolatile sig_atomic_t count = 0;\n\nvoid on_usr1(int sig) {\n    (void)sig;\n    count++;\n}\n\nint main(void) {\n    int n;\n    scanf(\"%d\", &n);\n    signal(SIGUSR1, on_usr1);\n    for (int i = 0; i < n; i++) raise(SIGUSR1);\n    printf(\"caught %d\\n\", (int)count);\n    return 0;\n}\n",
+     "explain": "The first raise happened before the handler existed, so the default action killed the program. Install handlers first."
+    },
+    {
+     "id": "m11-d3",
+     "kind": "predict",
+     "prompt": "Why is the counter declared `volatile sig_atomic_t` and not just `int`?",
+     "code": "volatile sig_atomic_t alarms = 0;",
+     "options": [
+      "The handler changes it behind main's back: volatile makes main re-read it, sig_atomic_t makes each change happen in one step",
+      "sig_atomic_t can hold bigger numbers",
+      "Handlers can only see global variables of that type",
+      "It makes the signal arrive faster"
+     ],
+     "answer": "The handler changes it behind main's back: volatile makes main re-read it, sig_atomic_t makes each change happen in one step",
+     "explain": "Without volatile, the compiler may keep a copy of the variable that never sees the handler's change."
+    },
+    {
+     "id": "m11-d4",
+     "kind": "write",
+     "prompt": "The input is a list of `1`s and `2`s; main raises SIGUSR1 for each 1 and SIGUSR2 for each 2. Write **one** handler, `on_signal`, that counts each kind (look at its `sig` parameter), and install it for both.",
+     "code": "#include <stdio.h>\n#include <signal.h>\n\nvolatile sig_atomic_t usr1 = 0, usr2 = 0;\n\n// write on_signal here, and install it at the start of main\n\nint main(void) {\n    int which;\n    while (scanf(\"%d\", &which) == 1) raise(which == 1 ? SIGUSR1 : SIGUSR2);\n    printf(\"USR1 %d USR2 %d\\n\", (int)usr1, (int)usr2);\n    return 0;\n}\n",
+     "tests": [
+      {
+       "stdin": "1 2 1 1\n",
+       "expected": "USR1 3 USR2 1\n",
+       "visible": true
+      },
+      {
+       "stdin": "2 2\n",
+       "expected": "USR1 0 USR2 2\n",
+       "visible": true
+      },
+      {
+       "stdin": "",
+       "expected": "USR1 0 USR2 0\n",
+       "visible": false
+      },
+      {
+       "stdin": "1\n",
+       "expected": "USR1 1 USR2 0\n",
+       "visible": false
+      }
+     ],
+     "solution": "#include <stdio.h>\n#include <signal.h>\n\nvolatile sig_atomic_t usr1 = 0, usr2 = 0;\n\nvoid on_signal(int sig) {\n    if (sig == SIGUSR1) usr1++;\n    else if (sig == SIGUSR2) usr2++;\n}\n\nint main(void) {\n    signal(SIGUSR1, on_signal);\n    signal(SIGUSR2, on_signal);\n    int which;\n    while (scanf(\"%d\", &which) == 1) raise(which == 1 ? SIGUSR1 : SIGUSR2);\n    printf(\"USR1 %d USR2 %d\\n\", (int)usr1, (int)usr2);\n    return 0;\n}\n",
+     "explain": "The handler's parameter is the signal that arrived, so one function can serve several signals."
+    }
+   ]
+  },
+  {
+   "id": "m11-l2",
+   "title": "sigaction, ignoring and blocking",
+   "concept": "`sigaction` is the modern, more precise way to install a handler: fill in a `struct sigaction` (zero it, set `sa_handler`) and pass it in. It returns -1 if it fails.\n\nInstead of a function you can install `SIG_IGN` (ignore it completely) or `SIG_DFL` (go back to the default action).\n\nYou can also **block** a signal with `sigprocmask`. It isn't lost; it waits as *pending* and is delivered when you unblock. Pending is a yes/no flag, not a counter: three blocked raises are delivered **once**.",
+   "example": {
+    "source": "#include <stdio.h>\n#include <signal.h>\n#include <string.h>\n\nvolatile sig_atomic_t interrupts = 0;\n\nvoid on_interrupt(int sig) {\n    (void)sig;\n    interrupts++;\n}\n\nint main(void) {\n    struct sigaction sa;\n    memset(&sa, 0, sizeof sa);\n    sa.sa_handler = on_interrupt;\n    sigemptyset(&sa.sa_mask);\n    if (sigaction(SIGINT, &sa, NULL) == -1) {\n        perror(\"sigaction\");\n        return 1;\n    }\n\n    raise(SIGINT);\n    raise(SIGINT);\n    signal(SIGINT, SIG_IGN);\n    raise(SIGINT);\n\n    printf(\"interrupts handled: %d\\n\", (int)interrupts);\n    printf(\"still running\\n\");\n    return 0;\n}\n",
+    "stdin": ""
+   },
+   "predict": {
+    "id": "m11-p2",
+    "kind": "predict",
+    "prompt": "Before you run it: type what it prints.",
+    "code": "#include <stdio.h>\n#include <signal.h>\n#include <string.h>\n\nvolatile sig_atomic_t interrupts = 0;\n\nvoid on_interrupt(int sig) {\n    (void)sig;\n    interrupts++;\n}\n\nint main(void) {\n    struct sigaction sa;\n    memset(&sa, 0, sizeof sa);\n    sa.sa_handler = on_interrupt;\n    sigemptyset(&sa.sa_mask);\n    if (sigaction(SIGINT, &sa, NULL) == -1) {\n        perror(\"sigaction\");\n        return 1;\n    }\n\n    raise(SIGINT);\n    raise(SIGINT);\n    signal(SIGINT, SIG_IGN);\n    raise(SIGINT);\n\n    printf(\"interrupts handled: %d\\n\", (int)interrupts);\n    printf(\"still running\\n\");\n    return 0;\n}\n",
+    "answer": "interrupts handled: 2\nstill running\n",
+    "explain": "Two raises reach the handler. After SIG_IGN the third is thrown away, and the program carries on.",
+    "warmupEligible": false
+   },
+   "drills": [
+    {
+     "id": "m11-d5",
+     "kind": "predict",
+     "prompt": "What does `signal(SIGINT, SIG_IGN);` do?",
+     "code": "signal(SIGINT, SIG_IGN);",
+     "options": [
+      "From now on SIGINT is thrown away: no handler, no kill",
+      "It restores SIGINT's default action",
+      "It blocks SIGINT until you unblock it",
+      "It sends SIGINT to the program"
+     ],
+     "answer": "From now on SIGINT is thrown away: no handler, no kill",
+     "explain": "SIG_IGN means ignore. SIG_DFL would put back the default (killing the program)."
+    },
+    {
+     "id": "m11-d6",
+     "kind": "fill",
+     "prompt": "Fill the blanks so `on_term` handles SIGTERM.",
+     "code": "struct sigaction sa;\nmemset(&sa, 0, sizeof sa);\nsa.sa_handler = ___;\nsigemptyset(&sa.sa_mask);\nif (sigaction(___, &sa, NULL) == -1) perror(\"sigaction\");",
+     "blanks": [
+      [
+       "on_term"
+      ],
+      [
+       "SIGTERM"
+      ]
+     ],
+     "explain": "`sa_handler` is the function to call; the first argument to sigaction is which signal it's for."
+    },
+    {
+     "id": "m11-d7",
+     "kind": "predict",
+     "prompt": "What does the judge see on stdout when this runs?",
+     "code": "printf(\"before\\n\");\nraise(SIGTERM);   // no handler installed\nprintf(\"after\\n\");",
+     "options": [
+      "Nothing at all",
+      "before",
+      "before, then after",
+      "Terminated"
+     ],
+     "answer": "Nothing at all",
+     "explain": "When output goes to a file or pipe, printf collects it in a buffer and writes it out later. SIGTERM kills the program before that happens, so `before` is lost. `fflush(stdout);` before a risky moment saves it."
+    },
+    {
+     "id": "m11-d8",
+     "kind": "predict",
+     "prompt": "Type what this prints.",
+     "code": "#include <stdio.h>\n#include <signal.h>\n\nvolatile sig_atomic_t handled = 0;\n\nvoid on_usr1(int sig) {\n    (void)sig;\n    handled++;\n}\n\nint main(void) {\n    signal(SIGUSR1, on_usr1);\n    sigset_t block;\n    sigemptyset(&block);\n    sigaddset(&block, SIGUSR1);\n\n    sigprocmask(SIG_BLOCK, &block, NULL);\n    raise(SIGUSR1);\n    raise(SIGUSR1);\n    raise(SIGUSR1);\n    printf(\"while blocked: %d\\n\", (int)handled);\n\n    sigprocmask(SIG_UNBLOCK, &block, NULL);\n    printf(\"after unblock: %d\\n\", (int)handled);\n    return 0;\n}\n",
+     "answer": "while blocked: 0\nafter unblock: 1\n",
+     "explain": "While blocked, SIGUSR1 is only marked pending, however many times it's raised. Unblocking delivers it once."
+    }
+   ]
+  },
+  {
+   "id": "m11-l3",
+   "title": "Timers: alarm and pause",
+   "concept": "`alarm(1)` (from `<unistd.h>`) asks the system to send you `SIGALRM` in about a second, and returns immediately so you can carry on working. `alarm(0)` cancels it.\n\n`pause()` puts the program to sleep until a signal arrives and its handler has run. Together they make a timeout: *wake me if this takes too long*.\n\nSIGALRM's default action is to kill the program, so install a handler **before** setting the alarm.",
+   "example": {
+    "source": "#include <stdio.h>\n#include <signal.h>\n#include <unistd.h>\n\nvolatile sig_atomic_t rang = 0;\n\nvoid on_alarm(int sig) {\n    (void)sig;\n    rang = 1;\n}\n\nint main(void) {\n    signal(SIGALRM, on_alarm);\n    alarm(1);\n    printf(\"waiting for the alarm...\\n\");\n    pause();\n    if (rang) printf(\"ring! woke up after the alarm\\n\");\n    return 0;\n}\n",
+    "stdin": ""
+   },
+   "predict": {
+    "id": "m11-p3",
+    "kind": "predict",
+    "prompt": "Before you run it: type what it prints.",
+    "code": "#include <stdio.h>\n#include <signal.h>\n#include <unistd.h>\n\nvolatile sig_atomic_t rang = 0;\n\nvoid on_alarm(int sig) {\n    (void)sig;\n    rang = 1;\n}\n\nint main(void) {\n    signal(SIGALRM, on_alarm);\n    alarm(1);\n    printf(\"waiting for the alarm...\\n\");\n    pause();\n    if (rang) printf(\"ring! woke up after the alarm\\n\");\n    return 0;\n}\n",
+    "answer": "waiting for the alarm...\nring! woke up after the alarm\n",
+    "explain": "pause sleeps for the second; the alarm's handler sets `rang`, then pause returns.",
+    "warmupEligible": false
+   },
+   "drills": [
+    {
+     "id": "m11-d9",
+     "kind": "predict",
+     "prompt": "What does `alarm(2);` do?",
+     "code": "alarm(2);",
+     "options": [
+      "Asks for SIGALRM in about 2 seconds, then returns straight away",
+      "Sleeps for 2 seconds",
+      "Kills the program after 2 seconds, no matter what",
+      "Sends SIGALRM twice"
+     ],
+     "answer": "Asks for SIGALRM in about 2 seconds, then returns straight away",
+     "explain": "alarm only sets the timer. What happens when it rings depends on SIGALRM's handler."
+    },
+    {
+     "id": "m11-d10",
+     "kind": "fix",
+     "prompt": "This sets an alarm and waits for it, but it's killed with *Alarm clock* instead of reporting `handled`. Fix it.",
+     "code": "#include <stdio.h>\n#include <signal.h>\n#include <unistd.h>\n\nvolatile sig_atomic_t rang = 0;\n\nvoid on_alarm(int sig) {\n    (void)sig;\n    rang = 1;\n}\n\nint main(void) {\n    int seconds;\n    scanf(\"%d\", &seconds);\n    alarm(seconds);\n    pause();\n    printf(\"alarm after %d s: %s\\n\", seconds, rang ? \"handled\" : \"missed\");\n    return 0;\n}\n",
+     "tests": [
+      {
+       "stdin": "1\n",
+       "expected": "alarm after 1 s: handled\n",
+       "visible": true
+      },
+      {
+       "stdin": "2\n",
+       "expected": "alarm after 2 s: handled\n",
+       "visible": false
+      }
+     ],
+     "solution": "#include <stdio.h>\n#include <signal.h>\n#include <unistd.h>\n\nvolatile sig_atomic_t rang = 0;\n\nvoid on_alarm(int sig) {\n    (void)sig;\n    rang = 1;\n}\n\nint main(void) {\n    int seconds;\n    scanf(\"%d\", &seconds);\n    signal(SIGALRM, on_alarm);\n    alarm(seconds);\n    pause();\n    printf(\"alarm after %d s: %s\\n\", seconds, rang ? \"handled\" : \"missed\");\n    return 0;\n}\n",
+     "explain": "The handler was written but never installed, so SIGALRM's default action (kill) ran. Install it before calling alarm."
+    },
+    {
+     "id": "m11-d11",
+     "kind": "predict",
+     "prompt": "Type what this prints.",
+     "code": "#include <stdio.h>\n#include <unistd.h>\n\nint main(void) {\n    alarm(5);\n    unsigned left = alarm(0);\n    printf(\"%u seconds were left; alarm cancelled\\n\", left);\n    return 0;\n}\n",
+     "answer": "5 seconds were left; alarm cancelled\n",
+     "explain": "alarm returns how many seconds the previous alarm still had to go. `alarm(0)` cancels it, so SIGALRM never comes."
+    }
+   ]
+  }
+ ],
+ "checkpoint": [
+  {
+   "id": "m11-cp1",
+   "kind": "predict",
+   "prompt": "Which call sends a signal to your own program right now?",
+   "code": "___;",
+   "options": [
+    "raise(SIGUSR1)",
+    "signal(SIGUSR1)",
+    "alarm(SIGUSR1)",
+    "pause(SIGUSR1)"
+   ],
+   "answer": "raise(SIGUSR1)",
+   "explain": "raise sends; signal and sigaction only decide what happens when one arrives."
+  },
+  {
+   "id": "m11-cp2",
+   "kind": "predict",
+   "prompt": "What's the safe thing to do inside a signal handler?",
+   "code": "void on_signal(int sig) { ... }",
+   "options": [
+    "Set a volatile sig_atomic_t flag and return",
+    "printf a report",
+    "malloc some memory to store the event",
+    "Call exit after printing"
+   ],
+   "answer": "Set a volatile sig_atomic_t flag and return",
+   "explain": "A handler can interrupt printf or malloc halfway through. Leave the real work to main."
+  },
+  {
+   "id": "m11-cp3",
+   "kind": "predict",
+   "prompt": "Type what this prints.",
+   "code": "#include <stdio.h>\n#include <signal.h>\n\nvolatile sig_atomic_t hits = 0;\n\nvoid on_int(int sig) {\n    (void)sig;\n    hits += 10;\n}\n\nint main(void) {\n    signal(SIGINT, on_int);\n    raise(SIGINT);\n    signal(SIGINT, SIG_IGN);\n    raise(SIGINT);\n    raise(SIGINT);\n    printf(\"%d\\n\", (int)hits);\n    return 0;\n}\n",
+   "answer": "10\n",
+   "explain": "Only the first raise reaches the handler; the other two are ignored."
+  },
+  {
+   "id": "m11-cp4",
+   "kind": "predict",
+   "prompt": "SIGUSR1 is blocked, raised 3 times, then unblocked. How many times does its handler run?",
+   "code": "sigprocmask(SIG_BLOCK, &set, NULL);",
+   "options": [
+    "Once: pending is a flag, not a count",
+    "3 times",
+    "Never",
+    "Twice"
+   ],
+   "answer": "Once: pending is a flag, not a count",
+   "explain": "Ordinary signals don't queue up. If you need every event, count them some other way."
+  },
+  {
+   "id": "m11-cp5",
+   "kind": "predict",
+   "prompt": "What does `pause()` do?",
+   "code": "pause();",
+   "options": [
+    "Sleeps until a signal arrives and its handler has run",
+    "Waits exactly one second",
+    "Ignores every signal for a while",
+    "Stops the program for good"
+   ],
+   "answer": "Sleeps until a signal arrives and its handler has run",
+   "explain": "It uses no CPU while it waits, which is why the alarm example costs nothing."
+  }
+ ]
+}

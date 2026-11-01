@@ -1,0 +1,23 @@
+{
+  "id": "m2-b1",
+  "title": "Split the Power",
+  "difficulty": "easy",
+  "story": "The reactor gives out power in whole units. Every module gets the same amount, and whatever can't be split evenly goes to the spare battery.\n\nInput: two whole numbers `P` (power units, 0–1000000) and `N` (modules, 1–1000).\n\nOutput, two lines:\n`Each: Q`, the units each module gets\n`Spare: S`, the units left over\n\nExample: `17 5` prints `Each: 3` then `Spare: 2`.",
+  "starter": "#include <stdio.h>\n\nint main(void) {\n    int power, modules;\n    scanf(\"%d %d\", &power, &modules);\n    // print Each and Spare\n    return 0;\n}\n",
+  "tests": [
+    { "stdin": "17 5\n", "expected": "Each: 3\nSpare: 2\n", "visible": true },
+    { "stdin": "100 10\n", "expected": "Each: 10\nSpare: 0\n", "visible": true },
+    { "stdin": "3 7\n", "expected": "Each: 0\nSpare: 3\n", "visible": true },
+    { "stdin": "0 4\n", "expected": "Each: 0\nSpare: 0\n", "visible": false },
+    { "stdin": "1000000 1\n", "expected": "Each: 1000000\nSpare: 0\n", "visible": false },
+    { "stdin": "999 1000\n", "expected": "Each: 0\nSpare: 999\n", "visible": false },
+    { "stdin": "47 6\n", "expected": "Each: 7\nSpare: 5\n", "visible": false },
+    { "stdin": "123456 789\n", "expected": "Each: 156\nSpare: 372\n", "visible": false }
+  ],
+  "hints": [
+    "Dividing two ints already throws away the fraction. Here that's exactly what you want.",
+    "The leftover is the remainder: the `%` operator.",
+    "`printf(\"Each: %d\\n\", power / modules);` and the same shape with `%` for Spare."
+  ],
+  "solution": "#include <stdio.h>\n\nint main(void) {\n    int power, modules;\n    scanf(\"%d %d\", &power, &modules);\n    printf(\"Each: %d\\n\", power / modules);\n    printf(\"Spare: %d\\n\", power % modules);\n    return 0;\n}\n"
+}

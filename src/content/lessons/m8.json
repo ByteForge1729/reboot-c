@@ -1,0 +1,392 @@
+{
+ "missionId": 8,
+ "cheatsheet": "**Stack vs heap**\nLocal variables vanish when their function returns. Heap memory stays until you `free` it.\n\n**Asking for memory**\n`int *a = malloc(n * sizeof(int));` · `calloc(n, sizeof(int))` also zeroes it · always check for `NULL`\n\n**Growing**\n`int *bigger = realloc(a, new_n * sizeof(int)); if (bigger == NULL) { ... } a = bigger;`\n\n**Giving it back**\n`free(a);` exactly once per block. Don't use `a` afterwards (dangling pointer).\n\n**Linked list**\n`typedef struct Node { int value; struct Node *next; } Node;` · walk with `for (Node *p = head; p != NULL; p = p->next)` · save `next` before freeing a node",
+ "lessons": [
+  {
+   "id": "m8-l1",
+   "title": "Asking for memory: malloc and free",
+   "concept": "So far every variable lived on the **stack**: made when a function starts, wiped when it returns. That's why an array's size had to be known up front.\n\nThe **heap** is memory you ask for while the program runs: `int *cells = malloc(n * sizeof(int));` asks for room for n ints and gives you the address. If there's no memory left you get `NULL`, so always check.\n\nHeap memory stays until **you** hand it back with `free(cells);`. Forget, and it leaks: that's this mission's reactor leak.",
+   "example": {
+    "source": "#include <stdio.h>\n#include <stdlib.h>\n\nint main(void) {\n    int n = 5;\n    int *cells = malloc(n * sizeof(int));\n    if (cells == NULL) {\n        printf(\"out of memory\\n\");\n        return 1;\n    }\n    for (int i = 0; i < n; i++) cells[i] = i * i;\n\n    int total = 0;\n    for (int i = 0; i < n; i++) total += cells[i];\n    printf(\"total %d\\n\", total);\n\n    free(cells);\n    return 0;\n}\n",
+    "stdin": ""
+   },
+   "predict": {
+    "id": "m8-p1",
+    "kind": "predict",
+    "prompt": "Before you run it: type what it prints.",
+    "code": "#include <stdio.h>\n#include <stdlib.h>\n\nint main(void) {\n    int n = 5;\n    int *cells = malloc(n * sizeof(int));\n    if (cells == NULL) {\n        printf(\"out of memory\\n\");\n        return 1;\n    }\n    for (int i = 0; i < n; i++) cells[i] = i * i;\n\n    int total = 0;\n    for (int i = 0; i < n; i++) total += cells[i];\n    printf(\"total %d\\n\", total);\n\n    free(cells);\n    return 0;\n}\n",
+    "answer": "total 30\n",
+    "explain": "The cells hold 0, 1, 4, 9 and 16, which add up to 30.",
+    "warmupEligible": false
+   },
+   "drills": [
+    {
+     "id": "m8-d1",
+     "kind": "predict",
+     "prompt": "On the judge an `int` is 4 bytes. How many bytes does this ask for?",
+     "code": "int *p = malloc(5 * sizeof(int));",
+     "options": [
+      "20",
+      "5",
+      "4",
+      "9"
+     ],
+     "answer": "20",
+     "explain": "`sizeof(int)` is 4, times 5 ints is 20 bytes. Letting `sizeof` do the maths means you never hard-code the 4."
+    },
+    {
+     "id": "m8-d2",
+     "kind": "fill",
+     "prompt": "Fill the blanks so this asks for room for 3 doubles, then gives it back. It prints `22.5`.",
+     "code": "#include <stdio.h>\n#include <stdlib.h>\n\nint main(void) {\n    int n = 3;\n    double *temps = ___(n * ___(double));\n    if (temps == NULL) return 1;\n    for (int i = 0; i < n; i++) temps[i] = 20.5 + i;\n    printf(\"%.1f\\n\", temps[2]);\n    ___(temps);\n    return 0;\n}\n",
+     "blanks": [
+      [
+       "malloc"
+      ],
+      [
+       "sizeof"
+      ],
+      [
+       "free"
+      ]
+     ],
+     "explain": "`malloc` takes a number of bytes, `sizeof(double)` says how big one double is, and `free` gives the block back."
+    },
+    {
+     "id": "m8-d3",
+     "kind": "fix",
+     "prompt": "`make_readings` builds the readings, but the program crashes as soon as main uses them. Read the compiler's warning, then fix it.",
+     "code": "#include <stdio.h>\n#include <stdlib.h>\n\nint *make_readings(int n) {\n    int readings[100];\n    for (int i = 0; i < n; i++) readings[i] = (i + 1) * 10;\n    return readings;\n}\n\nint main(void) {\n    int n;\n    scanf(\"%d\", &n);\n    int *r = make_readings(n);\n    for (int i = 0; i < n; i++) printf(\"%d\\n\", r[i]);\n    free(r);\n    return 0;\n}\n",
+     "tests": [
+      {
+       "stdin": "3\n",
+       "expected": "10\n20\n30\n",
+       "visible": true
+      },
+      {
+       "stdin": "1\n",
+       "expected": "10\n",
+       "visible": true
+      },
+      {
+       "stdin": "5\n",
+       "expected": "10\n20\n30\n40\n50\n",
+       "visible": false
+      }
+     ],
+     "solution": "#include <stdio.h>\n#include <stdlib.h>\n\nint *make_readings(int n) {\n    int *readings = malloc(n * sizeof(int));\n    if (readings == NULL) exit(1);\n    for (int i = 0; i < n; i++) readings[i] = (i + 1) * 10;\n    return readings;\n}\n\nint main(void) {\n    int n;\n    scanf(\"%d\", &n);\n    int *r = make_readings(n);\n    for (int i = 0; i < n; i++) printf(\"%d\\n\", r[i]);\n    free(r);\n    return 0;\n}\n",
+     "explain": "`readings` lived on make_readings' stack, which is wiped the moment it returns, so main got an address of nothing (gcc even warns: *function returns address of local variable*). Memory from `malloc` survives the return, and main frees it."
+    },
+    {
+     "id": "m8-d4",
+     "kind": "write",
+     "prompt": "Read `n`, then `n` numbers into memory from `malloc`. Print them back **in reverse order** on one line, separated by spaces, then free the memory.",
+     "code": "#include <stdio.h>\n#include <stdlib.h>\n\nint main(void) {\n    int n;\n    scanf(\"%d\", &n);\n    // malloc room for n ints, read them, print them backwards, free\n    return 0;\n}\n",
+     "tests": [
+      {
+       "stdin": "3\n1 2 3\n",
+       "expected": "3 2 1\n",
+       "visible": true
+      },
+      {
+       "stdin": "1\n42\n",
+       "expected": "42\n",
+       "visible": true
+      },
+      {
+       "stdin": "5\n-1 0 7 7 9\n",
+       "expected": "9 7 7 0 -1\n",
+       "visible": false
+      },
+      {
+       "stdin": "6\n10 20 30 40 50 60\n",
+       "expected": "60 50 40 30 20 10\n",
+       "visible": false
+      }
+     ],
+     "solution": "#include <stdio.h>\n#include <stdlib.h>\n\nint main(void) {\n    int n;\n    scanf(\"%d\", &n);\n    int *values = malloc(n * sizeof(int));\n    if (values == NULL) return 1;\n    for (int i = 0; i < n; i++) scanf(\"%d\", &values[i]);\n    for (int i = n - 1; i >= 0; i--) {\n        printf(\"%d\", values[i]);\n        if (i > 0) printf(\" \");\n    }\n    printf(\"\\n\");\n    free(values);\n    return 0;\n}\n",
+     "explain": "Use the heap block exactly like an array: `values[i]`. The only fiddly part is the spaces: print one between numbers, not after the last."
+    }
+   ]
+  },
+  {
+   "id": "m8-l2",
+   "title": "Memory that grows: calloc and realloc",
+   "concept": "`calloc(n, sizeof(int))` is malloc that also sets every byte to **0**. Plain `malloc` gives you whatever junk was there.\n\nWhen a block is full, `realloc(log, new_size)` makes it bigger. It may move your data to a new address, so use what it returns. Doubling the size each time keeps the moves rare.\n\nCatch the result in a **new** pointer first: if realloc fails it returns `NULL`, and `log = realloc(log, ...)` would lose your only pointer to the old block.",
+   "example": {
+    "source": "#include <stdio.h>\n#include <stdlib.h>\n\nint main(void) {\n    int capacity = 2, count = 0, value;\n    int *log = malloc(capacity * sizeof(int));\n    if (log == NULL) return 1;\n\n    while (scanf(\"%d\", &value) == 1 && value != 0) {\n        if (count == capacity) {\n            capacity *= 2;\n            int *bigger = realloc(log, capacity * sizeof(int));\n            if (bigger == NULL) {\n                free(log);\n                return 1;\n            }\n            log = bigger;\n        }\n        log[count++] = value;\n    }\n\n    printf(\"%d readings, room for %d\\n\", count, capacity);\n    printf(\"last: %d\\n\", log[count - 1]);\n    free(log);\n    return 0;\n}\n",
+    "stdin": "4 8 15 16 23 42 0\n"
+   },
+   "predict": {
+    "id": "m8-p2",
+    "kind": "predict",
+    "prompt": "It's fed `4 8 15 16 23 42 0`. Before you run it: type what it prints.",
+    "code": "#include <stdio.h>\n#include <stdlib.h>\n\nint main(void) {\n    int capacity = 2, count = 0, value;\n    int *log = malloc(capacity * sizeof(int));\n    if (log == NULL) return 1;\n\n    while (scanf(\"%d\", &value) == 1 && value != 0) {\n        if (count == capacity) {\n            capacity *= 2;\n            int *bigger = realloc(log, capacity * sizeof(int));\n            if (bigger == NULL) {\n                free(log);\n                return 1;\n            }\n            log = bigger;\n        }\n        log[count++] = value;\n    }\n\n    printf(\"%d readings, room for %d\\n\", count, capacity);\n    printf(\"last: %d\\n\", log[count - 1]);\n    free(log);\n    return 0;\n}\n",
+    "answer": "6 readings, room for 8\nlast: 42\n",
+    "explain": "Six readings arrive. Room grows 2 → 4 when the third arrives, then 4 → 8 for the fifth.",
+    "warmupEligible": false
+   },
+   "drills": [
+    {
+     "id": "m8-d5",
+     "kind": "predict",
+     "prompt": "Type what this prints.",
+     "code": "#include <stdio.h>\n#include <stdlib.h>\n\nint main(void) {\n    int *a = calloc(3, sizeof(int));\n    if (a == NULL) return 1;\n    a[1] = 8;\n    printf(\"%d %d %d\\n\", a[0], a[1], a[2]);\n    free(a);\n    return 0;\n}\n",
+     "answer": "0 8 0\n",
+     "explain": "calloc zeroes the whole block, so the two untouched ints are 0."
+    },
+    {
+     "id": "m8-d6",
+     "kind": "predict",
+     "prompt": "Why catch realloc's result in `bigger` instead of writing `log = realloc(log, size);`?",
+     "code": "int *bigger = realloc(log, size);",
+     "options": [
+      "If realloc fails it returns NULL, and you'd lose your only pointer to the old block",
+      "realloc can only store into a brand-new variable",
+      "It makes realloc faster",
+      "`log` can't be changed after malloc"
+     ],
+     "answer": "If realloc fails it returns NULL, and you'd lose your only pointer to the old block",
+     "explain": "On failure the old block is still there and still yours. Overwriting `log` with NULL leaks it."
+    },
+    {
+     "id": "m8-d7",
+     "kind": "fill",
+     "prompt": "Fill the blanks to grow the block safely.",
+     "code": "capacity *= 2;\nint *bigger = ___(log, capacity * sizeof(int));\nif (bigger == ___) {\n    free(log);\n    return 1;\n}\nlog = bigger;",
+     "blanks": [
+      [
+       "realloc"
+      ],
+      [
+       "NULL"
+      ]
+     ],
+     "explain": "`realloc` returns the (maybe moved) bigger block, or `NULL` if there's no memory."
+    },
+    {
+     "id": "m8-d8",
+     "kind": "write",
+     "prompt": "Readings arrive until a `0` (you don't know how many). Store them, growing the block when it's full. Then print every reading **strictly above the average**, one per line, in the order they came. If there are none, print `none`.",
+     "code": "#include <stdio.h>\n#include <stdlib.h>\n\nint main(void) {\n    int capacity = 4, count = 0, value;\n    int *log = malloc(capacity * sizeof(int));\n    if (log == NULL) return 1;\n\n    while (scanf(\"%d\", &value) == 1 && value != 0) {\n        // grow log when it's full, then store value\n    }\n\n    // print the readings above the average\n    free(log);\n    return 0;\n}\n",
+     "tests": [
+      {
+       "stdin": "1 2 3 4 5 6 0\n",
+       "expected": "4\n5\n6\n",
+       "visible": true
+      },
+      {
+       "stdin": "5 5 5 0\n",
+       "expected": "none\n",
+       "visible": true
+      },
+      {
+       "stdin": "10 0\n",
+       "expected": "none\n",
+       "visible": false
+      },
+      {
+       "stdin": "-3 7 -1 0\n",
+       "expected": "7\n",
+       "visible": false
+      },
+      {
+       "stdin": "100 1 1 1 1 1 1 1 1 0\n",
+       "expected": "100\n",
+       "visible": false
+      },
+      {
+       "stdin": "2 9 4 8 0\n",
+       "expected": "9\n8\n",
+       "visible": false
+      }
+     ],
+     "solution": "#include <stdio.h>\n#include <stdlib.h>\n\nint main(void) {\n    int capacity = 4, count = 0, value;\n    int *log = malloc(capacity * sizeof(int));\n    if (log == NULL) return 1;\n\n    long long sum = 0;\n    while (scanf(\"%d\", &value) == 1 && value != 0) {\n        if (count == capacity) {\n            capacity *= 2;\n            int *bigger = realloc(log, capacity * sizeof(int));\n            if (bigger == NULL) {\n                free(log);\n                return 1;\n            }\n            log = bigger;\n        }\n        log[count++] = value;\n        sum += value;\n    }\n\n    int printed = 0;\n    for (int i = 0; i < count; i++) {\n        if ((long long)log[i] * count > sum) {\n            printf(\"%d\\n\", log[i]);\n            printed++;\n        }\n    }\n    if (printed == 0) printf(\"none\\n\");\n    free(log);\n    return 0;\n}\n",
+     "explain": "You need every reading stored before you know the average, hence the growing block. `value * count > sum` compares with the average without any decimals."
+    }
+   ]
+  },
+  {
+   "id": "m8-l3",
+   "title": "Linked lists: nodes that point to nodes",
+   "concept": "A **linked list** is a chain of small heap blocks. Each node holds a value and a pointer to the next node; the last one points to `NULL`.\n\nAdding at the front is cheap: make a node, point it at the old head, and it becomes the new head. Walking the list is `for (Node *p = head; p != NULL; p = p->next)`.\n\nFreeing needs care: save `head->next` **before** `free(head)`, because after free you're not allowed to look inside that node.",
+   "example": {
+    "source": "#include <stdio.h>\n#include <stdlib.h>\n\ntypedef struct Node {\n    int value;\n    struct Node *next;\n} Node;\n\nNode *push(Node *head, int value) {\n    Node *n = malloc(sizeof(Node));\n    if (n == NULL) exit(1);\n    n->value = value;\n    n->next = head;\n    return n;\n}\n\nint main(void) {\n    Node *head = NULL;\n    head = push(head, 1);\n    head = push(head, 2);\n    head = push(head, 3);\n\n    for (Node *p = head; p != NULL; p = p->next) printf(\"%d -> \", p->value);\n    printf(\"NULL\\n\");\n\n    while (head != NULL) {\n        Node *next = head->next;\n        free(head);\n        head = next;\n    }\n    return 0;\n}\n",
+    "stdin": ""
+   },
+   "predict": {
+    "id": "m8-p3",
+    "kind": "predict",
+    "prompt": "Before you run it: type what it prints.",
+    "code": "#include <stdio.h>\n#include <stdlib.h>\n\ntypedef struct Node {\n    int value;\n    struct Node *next;\n} Node;\n\nNode *push(Node *head, int value) {\n    Node *n = malloc(sizeof(Node));\n    if (n == NULL) exit(1);\n    n->value = value;\n    n->next = head;\n    return n;\n}\n\nint main(void) {\n    Node *head = NULL;\n    head = push(head, 1);\n    head = push(head, 2);\n    head = push(head, 3);\n\n    for (Node *p = head; p != NULL; p = p->next) printf(\"%d -> \", p->value);\n    printf(\"NULL\\n\");\n\n    while (head != NULL) {\n        Node *next = head->next;\n        free(head);\n        head = next;\n    }\n    return 0;\n}\n",
+    "answer": "3 -> 2 -> 1 -> NULL\n",
+    "explain": "Each push goes in front, so the last one pushed (3) comes first.",
+    "warmupEligible": false
+   },
+   "drills": [
+    {
+     "id": "m8-d9",
+     "kind": "parsons",
+     "prompt": "Order and indent the lines to free a whole list without touching freed memory.",
+     "lines": [
+      {
+       "text": "while (head != NULL) {",
+       "indent": 0
+      },
+      {
+       "text": "Node *next = head->next;",
+       "indent": 1
+      },
+      {
+       "text": "free(head);",
+       "indent": 1
+      },
+      {
+       "text": "head = next;",
+       "indent": 1
+      },
+      {
+       "text": "}",
+       "indent": 0
+      }
+     ],
+     "explain": "Remember where the rest of the chain is, free this node, then move on."
+    },
+    {
+     "id": "m8-d10",
+     "kind": "predict",
+     "prompt": "What's wrong with this?",
+     "code": "free(head);\nhead = head->next;",
+     "options": [
+      "It reads `head->next` from a node that's already been freed",
+      "Nothing, it frees the list",
+      "free needs the size of the node",
+      "It frees the next node instead"
+     ],
+     "answer": "It reads `head->next` from a node that's already been freed",
+     "explain": "After `free(head)` the node isn't yours any more, so `head->next` is a **dangling pointer** read. Save next first."
+    },
+    {
+     "id": "m8-d11",
+     "kind": "fix",
+     "prompt": "This should print how many nodes the list has and their sum. It's one short, and an empty list crashes it. Fix the loop.",
+     "code": "#include <stdio.h>\n#include <stdlib.h>\n\ntypedef struct Node {\n    int value;\n    struct Node *next;\n} Node;\n\nNode *push(Node *head, int value) {\n    Node *n = malloc(sizeof(Node));\n    if (n == NULL) exit(1);\n    n->value = value;\n    n->next = head;\n    return n;\n}\n\nvoid free_list(Node *head) {\n    while (head != NULL) {\n        Node *next = head->next;\n        free(head);\n        head = next;\n    }\n}\n\nint main(void) {\n    int n;\n    scanf(\"%d\", &n);\n    Node *head = NULL;\n    for (int i = 0; i < n; i++) {\n        int v;\n        scanf(\"%d\", &v);\n        head = push(head, v);\n    }\n\n    int count = 0, sum = 0;\n    for (Node *p = head; p->next != NULL; p = p->next) {\n        count++;\n        sum += p->value;\n    }\n    printf(\"count %d sum %d\\n\", count, sum);\n    free_list(head);\n    return 0;\n}\n",
+     "tests": [
+      {
+       "stdin": "3\n1 2 3\n",
+       "expected": "count 3 sum 6\n",
+       "visible": true
+      },
+      {
+       "stdin": "0\n",
+       "expected": "count 0 sum 0\n",
+       "visible": true
+      },
+      {
+       "stdin": "1\n5\n",
+       "expected": "count 1 sum 5\n",
+       "visible": false
+      },
+      {
+       "stdin": "4\n-1 -2 10 3\n",
+       "expected": "count 4 sum 10\n",
+       "visible": false
+      }
+     ],
+     "solution": "#include <stdio.h>\n#include <stdlib.h>\n\ntypedef struct Node {\n    int value;\n    struct Node *next;\n} Node;\n\nNode *push(Node *head, int value) {\n    Node *n = malloc(sizeof(Node));\n    if (n == NULL) exit(1);\n    n->value = value;\n    n->next = head;\n    return n;\n}\n\nvoid free_list(Node *head) {\n    while (head != NULL) {\n        Node *next = head->next;\n        free(head);\n        head = next;\n    }\n}\n\nint main(void) {\n    int n;\n    scanf(\"%d\", &n);\n    Node *head = NULL;\n    for (int i = 0; i < n; i++) {\n        int v;\n        scanf(\"%d\", &v);\n        head = push(head, v);\n    }\n\n    int count = 0, sum = 0;\n    for (Node *p = head; p != NULL; p = p->next) {\n        count++;\n        sum += p->value;\n    }\n    printf(\"count %d sum %d\\n\", count, sum);\n    free_list(head);\n    return 0;\n}\n",
+     "explain": "`p->next != NULL` stops before the last node, and with an empty list `p` is NULL, so `p->next` crashes. Test `p != NULL`."
+    },
+    {
+     "id": "m8-d12",
+     "kind": "write",
+     "prompt": "Finish `largest`: return the biggest value in a list that has at least one node. `main` is done.",
+     "code": "#include <stdio.h>\n#include <stdlib.h>\n\ntypedef struct Node {\n    int value;\n    struct Node *next;\n} Node;\n\nNode *push(Node *head, int value) {\n    Node *n = malloc(sizeof(Node));\n    if (n == NULL) exit(1);\n    n->value = value;\n    n->next = head;\n    return n;\n}\n\nvoid free_list(Node *head) {\n    while (head != NULL) {\n        Node *next = head->next;\n        free(head);\n        head = next;\n    }\n}\n\nint largest(Node *head) {\n    // walk the list\n    return 0;\n}\n\nint main(void) {\n    int n;\n    scanf(\"%d\", &n);\n    Node *head = NULL;\n    for (int i = 0; i < n; i++) {\n        int v;\n        scanf(\"%d\", &v);\n        head = push(head, v);\n    }\n\n    printf(\"%d\\n\", largest(head));\n    free_list(head);\n    return 0;\n}\n",
+     "tests": [
+      {
+       "stdin": "3\n4 9 2\n",
+       "expected": "9\n",
+       "visible": true
+      },
+      {
+       "stdin": "1\n-5\n",
+       "expected": "-5\n",
+       "visible": true
+      },
+      {
+       "stdin": "4\n-3 -1 -7 -2\n",
+       "expected": "-1\n",
+       "visible": false
+      },
+      {
+       "stdin": "5\n1 1 1 1 1\n",
+       "expected": "1\n",
+       "visible": false
+      }
+     ],
+     "solution": "#include <stdio.h>\n#include <stdlib.h>\n\ntypedef struct Node {\n    int value;\n    struct Node *next;\n} Node;\n\nNode *push(Node *head, int value) {\n    Node *n = malloc(sizeof(Node));\n    if (n == NULL) exit(1);\n    n->value = value;\n    n->next = head;\n    return n;\n}\n\nvoid free_list(Node *head) {\n    while (head != NULL) {\n        Node *next = head->next;\n        free(head);\n        head = next;\n    }\n}\n\nint largest(Node *head) {\n    int best = head->value;\n    for (Node *p = head->next; p != NULL; p = p->next) {\n        if (p->value > best) best = p->value;\n    }\n    return best;\n}\n\nint main(void) {\n    int n;\n    scanf(\"%d\", &n);\n    Node *head = NULL;\n    for (int i = 0; i < n; i++) {\n        int v;\n        scanf(\"%d\", &v);\n        head = push(head, v);\n    }\n\n    printf(\"%d\\n\", largest(head));\n    free_list(head);\n    return 0;\n}\n",
+     "explain": "Start `best` at the first node's value (not 0, the readings might all be negative), then walk the rest."
+    }
+   ]
+  }
+ ],
+ "checkpoint": [
+  {
+   "id": "m8-cp1",
+   "kind": "predict",
+   "prompt": "Which rule keeps a program leak-free?",
+   "code": "int *p = malloc(10 * sizeof(int));",
+   "options": [
+    "Every block from malloc, calloc or realloc gets exactly one free",
+    "Free every pointer variable at the end of main",
+    "Only free memory in long programs",
+    "Free each block twice to be safe"
+   ],
+   "answer": "Every block from malloc, calloc or realloc gets exactly one free",
+   "explain": "One block, one free. Freeing twice is a bug too."
+  },
+  {
+   "id": "m8-cp2",
+   "kind": "predict",
+   "prompt": "Type what this prints.",
+   "code": "#include <stdio.h>\n#include <stdlib.h>\n\nint main(void) {\n    int *p = malloc(4 * sizeof(int));\n    if (p == NULL) return 1;\n    for (int i = 0; i < 4; i++) p[i] = i * 3;\n    int *q = p + 2;\n    printf(\"%d %d\\n\", *q, q[1]);\n    free(p);\n    return 0;\n}\n",
+   "answer": "6 9\n",
+   "explain": "The block holds 0 3 6 9. `q` points at element 2 (6), and `q[1]` is the one after it (9)."
+  },
+  {
+   "id": "m8-cp3",
+   "kind": "predict",
+   "prompt": "Right after `free(p);`, what is `p`?",
+   "code": "free(p);",
+   "options": [
+    "A dangling pointer: it still holds the old address, but using it is a bug",
+    "Automatically set to NULL",
+    "A pointer to a fresh block",
+    "Gone, along with the variable"
+   ],
+   "answer": "A dangling pointer: it still holds the old address, but using it is a bug",
+   "explain": "free gives the memory back but leaves `p` unchanged. Some people write `p = NULL;` straight after to be safe."
+  },
+  {
+   "id": "m8-cp4",
+   "kind": "predict",
+   "prompt": "Type what this prints.",
+   "code": "#include <stdio.h>\n#include <stdlib.h>\n\ntypedef struct Node {\n    int value;\n    struct Node *next;\n} Node;\n\nNode *push(Node *head, int value) {\n    Node *n = malloc(sizeof(Node));\n    if (n == NULL) exit(1);\n    n->value = value;\n    n->next = head;\n    return n;\n}\n\nvoid free_list(Node *head) {\n    while (head != NULL) {\n        Node *next = head->next;\n        free(head);\n        head = next;\n    }\n}\n\nint main(void) {\n    Node *head = NULL;\n    head = push(head, 5);\n    head = push(head, 6);\n    head = push(head, 7);\n    printf(\"%d %d\\n\", head->value, head->next->value);\n    free_list(head);\n    return 0;\n}\n",
+   "answer": "7 6\n",
+   "explain": "Pushing at the front reverses the order: the list is 7 → 6 → 5."
+  },
+  {
+   "id": "m8-cp5",
+   "kind": "predict",
+   "prompt": "A function mallocs a block, stores the address in a local pointer, and returns without freeing it or handing it back. What's that called?",
+   "code": "void scan(void) {\n    int *buf = malloc(100 * sizeof(int));\n    /* ... */\n}",
+   "options": [
+    "A memory leak",
+    "A dangling pointer",
+    "A stack overflow",
+    "A segmentation fault"
+   ],
+   "answer": "A memory leak",
+   "explain": "Nobody has the address any more, so the block can never be freed: it leaks a little every call."
+  }
+ ]
+}

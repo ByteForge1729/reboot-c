@@ -1,0 +1,55 @@
+{
+  "id": "m4-b3",
+  "title": "Next Prime Frequency",
+  "difficulty": "hard",
+  "story": "Comms only transmit on prime-numbered frequencies. Given the current frequency, find the next usable one.\n\nA **prime** is a whole number above 1 that only divides by 1 and itself.\n\nInput: one whole number `N` (0 ≤ N ≤ 1000000).\n\nOutput: the smallest prime **strictly greater** than N.\n\nExample: `10` prints `11`; `13` prints `17`.",
+  "starter": "#include <stdio.h>\n\nint main(void) {\n    int n;\n    scanf(\"%d\", &n);\n    // try n + 1, n + 2, ... until one is prime\n    return 0;\n}\n",
+  "tests": [
+    {
+      "stdin": "10\n",
+      "expected": "11\n",
+      "visible": true
+    },
+    {
+      "stdin": "1\n",
+      "expected": "2\n",
+      "visible": true
+    },
+    {
+      "stdin": "13\n",
+      "expected": "17\n",
+      "visible": true
+    },
+    {
+      "stdin": "0\n",
+      "expected": "2\n",
+      "visible": false
+    },
+    {
+      "stdin": "2\n",
+      "expected": "3\n",
+      "visible": false
+    },
+    {
+      "stdin": "1000000\n",
+      "expected": "1000003\n",
+      "visible": false
+    },
+    {
+      "stdin": "24\n",
+      "expected": "29\n",
+      "visible": false
+    },
+    {
+      "stdin": "7919\n",
+      "expected": "7927\n",
+      "visible": false
+    }
+  ],
+  "hints": [
+    "Loop over candidates starting at `n + 1`. For each, check whether it's prime.",
+    "To check `p`: try every divisor `d` from 2 while `d * d <= p`. If any divides evenly (`p % d == 0`), it's not prime. Don't forget 0 and 1 aren't prime.",
+    "Use a flag: `int prime = 1;` set it to 0 when you find a divisor, and `break` out of the outer loop the first time a candidate stays prime."
+  ],
+  "solution": "#include <stdio.h>\n\nint is_prime(int p) {\n    if (p < 2) return 0;\n    for (int d = 2; d * d <= p; d++) {\n        if (p % d == 0) return 0;\n    }\n    return 1;\n}\n\nint main(void) {\n    int n;\n    scanf(\"%d\", &n);\n    int p = n + 1;\n    while (!is_prime(p)) p++;\n    printf(\"%d\\n\", p);\n    return 0;\n}\n"
+}

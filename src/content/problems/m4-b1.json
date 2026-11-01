@@ -1,0 +1,55 @@
+{
+  "id": "m4-b1",
+  "title": "Reactor Code Checksum",
+  "difficulty": "easy",
+  "story": "Every reactor code carries a checksum: the sum of its digits. The control panel won't accept a code until you confirm it.\n\nInput: one whole number `N` (0 ≤ N ≤ 2000000000).\n\nOutput: the sum of the digits of N.\n\nExample: `1234` prints `10`.",
+  "starter": "#include <stdio.h>\n\nint main(void) {\n    int n;\n    scanf(\"%d\", &n);\n    // add up the digits\n    return 0;\n}\n",
+  "tests": [
+    {
+      "stdin": "1234\n",
+      "expected": "10\n",
+      "visible": true
+    },
+    {
+      "stdin": "0\n",
+      "expected": "0\n",
+      "visible": true
+    },
+    {
+      "stdin": "9\n",
+      "expected": "9\n",
+      "visible": true
+    },
+    {
+      "stdin": "1000000000\n",
+      "expected": "1\n",
+      "visible": false
+    },
+    {
+      "stdin": "999999999\n",
+      "expected": "81\n",
+      "visible": false
+    },
+    {
+      "stdin": "2000000000\n",
+      "expected": "2\n",
+      "visible": false
+    },
+    {
+      "stdin": "506\n",
+      "expected": "11\n",
+      "visible": false
+    },
+    {
+      "stdin": "77\n",
+      "expected": "14\n",
+      "visible": false
+    }
+  ],
+  "hints": [
+    "The last digit of n is `n % 10`.",
+    "`n / 10` chops the last digit off. Repeat while `n > 0`.",
+    "Add `n % 10` to a running total, then `n = n / 10;`, inside `while (n > 0)`. For 0 the loop never runs and the total stays 0."
+  ],
+  "solution": "#include <stdio.h>\n\nint main(void) {\n    int n, sum = 0;\n    scanf(\"%d\", &n);\n    while (n > 0) {\n        sum += n % 10;\n        n /= 10;\n    }\n    printf(\"%d\\n\", sum);\n    return 0;\n}\n"
+}

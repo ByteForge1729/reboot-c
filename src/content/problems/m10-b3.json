@@ -1,0 +1,55 @@
+{
+  "id": "m10-b3",
+  "title": "Mini printf",
+  "difficulty": "hard",
+  "story": "The translator's own print routine burned out. Build a replacement **without using printf** inside it: only `putchar`.\n\nWrite `int mini_printf(const char *fmt, ...)`. It understands `%d` (int), `%s` (string), `%c` (char), `%x` (an `unsigned int` in lowercase hex, like `ff`) and `%%`, prints every other character as it is, and **returns how many characters it printed**.\n\n`main` is written for you. It reads a whole number `n` (any `int`, including the most negative one) and a word, makes three calls and prints what each returned.\n\nExample: input `255 sos` prints\n`n=255 w=sos`\n`hex ff, first s, 100%`\n`[sos|127]`\n`12 22 10`",
+  "starter": "#include <stdio.h>\n#include <stdarg.h>\n\nint mini_printf(const char *fmt, ...) {\n    return 0;\n}\n\nint main(void) {\n    int n;\n    char w[32];\n    scanf(\"%d %31s\", &n, w);\n    int a = mini_printf(\"n=%d w=%s\\n\", n, w);\n    int b = mini_printf(\"hex %x, first %c, 100%%\\n\", n, w[0]);\n    int c = mini_printf(\"[%s|%d]\\n\", w, n / 2);\n    printf(\"%d %d %d\\n\", a, b, c);\n    return 0;\n}\n",
+  "tests": [
+    {
+      "stdin": "255 sos\n",
+      "expected": "n=255 w=sos\nhex ff, first s, 100%\n[sos|127]\n12 22 10\n",
+      "visible": true
+    },
+    {
+      "stdin": "0 a\n",
+      "expected": "n=0 w=a\nhex 0, first a, 100%\n[a|0]\n8 21 6\n",
+      "visible": true
+    },
+    {
+      "stdin": "-1 neg\n",
+      "expected": "n=-1 w=neg\nhex ffffffff, first n, 100%\n[neg|0]\n11 28 8\n",
+      "visible": true
+    },
+    {
+      "stdin": "2147483647 max\n",
+      "expected": "n=2147483647 w=max\nhex 7fffffff, first m, 100%\n[max|1073741823]\n19 28 17\n",
+      "visible": false
+    },
+    {
+      "stdin": "-2147483648 min\n",
+      "expected": "n=-2147483648 w=min\nhex 80000000, first m, 100%\n[min|-1073741824]\n20 28 18\n",
+      "visible": false
+    },
+    {
+      "stdin": "16 hexed\n",
+      "expected": "n=16 w=hexed\nhex 10, first h, 100%\n[hexed|8]\n13 22 10\n",
+      "visible": false
+    },
+    {
+      "stdin": "-7 x\n",
+      "expected": "n=-7 w=x\nhex fffffff9, first x, 100%\n[x|-3]\n9 28 7\n",
+      "visible": false
+    },
+    {
+      "stdin": "1000000 mega\n",
+      "expected": "n=1000000 w=mega\nhex f4240, first m, 100%\n[mega|500000]\n17 25 14\n",
+      "visible": false
+    }
+  ],
+  "hints": [
+    "Structure: walk `fmt`; plain characters go to `putchar` and add 1 to the count. On `%`, look at the next letter and call a helper. Make each helper **return** how many characters it printed.",
+    "To print a number without printf, peel digits off with `% 10` into a small char array, then print them backwards. Do the same with `% 16` and `\"0123456789abcdef\"` for hex. Don't forget that 0 has one digit.",
+    "`-n` overflows when n is -2147483648. Convert to a wider type first: `long long v = n; if (v < 0) { putchar('-'); v = -v; }`. For `%x`, read the argument as `unsigned int`, which makes -1 come out as `ffffffff`."
+  ],
+  "solution": "#include <stdio.h>\n#include <stdarg.h>\n\nstatic int print_unsigned(unsigned long long v, unsigned base) {\n    const char *digits = \"0123456789abcdef\";\n    char buf[32];\n    int len = 0;\n    do {\n        buf[len++] = digits[v % base];\n        v /= base;\n    } while (v > 0);\n    for (int i = len - 1; i >= 0; i--) putchar(buf[i]);\n    return len;\n}\n\nstatic int print_int(int n) {\n    long long v = n;\n    int printed = 0;\n    if (v < 0) {\n        putchar('-');\n        printed++;\n        v = -v;\n    }\n    return printed + print_unsigned((unsigned long long)v, 10);\n}\n\nstatic int print_string(const char *s) {\n    int printed = 0;\n    for (; *s != '\\0'; s++) {\n        putchar(*s);\n        printed++;\n    }\n    return printed;\n}\n\nint mini_printf(const char *fmt, ...) {\n    va_list args;\n    va_start(args, fmt);\n    int printed = 0;\n    for (const char *p = fmt; *p != '\\0'; p++) {\n        if (*p != '%') {\n            putchar(*p);\n            printed++;\n            continue;\n        }\n        p++;\n        if (*p == 'd') printed += print_int(va_arg(args, int));\n        else if (*p == 's') printed += print_string(va_arg(args, const char *));\n        else if (*p == 'x') printed += print_unsigned(va_arg(args, unsigned int), 16);\n        else if (*p == 'c') {\n            putchar(va_arg(args, int));\n            printed++;\n        } else {\n            putchar(*p);\n            printed++;\n        }\n    }\n    va_end(args);\n    return printed;\n}\n\nint main(void) {\n    int n;\n    char w[32];\n    scanf(\"%d %31s\", &n, w);\n    int a = mini_printf(\"n=%d w=%s\\n\", n, w);\n    int b = mini_printf(\"hex %x, first %c, 100%%\\n\", n, w[0]);\n    int c = mini_printf(\"[%s|%d]\\n\", w, n / 2);\n    printf(\"%d %d %d\\n\", a, b, c);\n    return 0;\n}\n"
+}

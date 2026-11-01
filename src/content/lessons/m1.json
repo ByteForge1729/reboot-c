@@ -1,0 +1,207 @@
+{
+  "missionId": 1,
+  "cheatsheet": "**Variables**\nA named box for a value: `int oxygen = 4;`\n\n**Types**\n`int` whole numbers · `double` decimals · `char` one character in single quotes, like `'Z'`\n\n**Printing values**\n`%d` int · `%f` double (`%.1f` = 1 decimal) · `%c` char · `%5d` pad to 5 wide · `%05d` pad with zeros · `%%` a real percent sign\n\n**Reading input**\n`scanf(\"%d\", &crew);` int · `scanf(\"%lf\", &temp);` double (note the `l`) · always the `&`\n\n**Constants**\n`#define MAX_CREW 6` at the top. Names in CAPITALS by habit.",
+  "lessons": [
+    {
+      "id": "m1-l1",
+      "title": "Boxes with names",
+      "concept": "A **variable** is a named box that holds a value. You say what kind of value it holds, give it a name, and usually a starting value:\n\n`int oxygen = 4;`\n\n`int` holds whole numbers, `double` holds decimals, `char` holds one character.\n\nTo print a variable, put a **placeholder** in the text and the variable after a comma: `%d` for int, `%f` for double, `%c` for char.",
+      "example": {
+        "source": "#include <stdio.h>\n\nint main(void) {\n    int oxygen = 4;\n    double temp = -12.5;\n    printf(\"O2: %d\\n\", oxygen);\n    printf(\"Temp: %.1f\\n\", temp);\n    return 0;\n}\n"
+      },
+      "predict": {
+        "id": "m1-p1",
+        "kind": "predict",
+        "prompt": "Before you run it: type what this prints.",
+        "code": "#include <stdio.h>\n\nint main(void) {\n    int oxygen = 4;\n    double temp = -12.5;\n    printf(\"O2: %d\\n\", oxygen);\n    printf(\"Temp: %.1f\\n\", temp);\n    return 0;\n}\n",
+        "answer": "O2: 4\nTemp: -12.5\n",
+        "explain": "Each placeholder is swapped for the variable's value. `%.1f` shows one decimal place."
+      },
+      "drills": [
+        {
+          "id": "m1-d1",
+          "kind": "fill",
+          "prompt": "`crew` holds a whole number. Fill in its type.",
+          "code": "___ crew = 1;\nprintf(\"Crew: %d\\n\", crew);",
+          "blanks": [["int"]],
+          "explain": "Whole numbers are `int`."
+        },
+        {
+          "id": "m1-d2",
+          "kind": "predict",
+          "prompt": "What does this print?",
+          "code": "int a = 7;\na = a + 3;\nprintf(\"%d\\n\", a);",
+          "options": ["10", "7", "a + 3", "73"],
+          "answer": "10",
+          "explain": "`a = a + 3` works out the right side first (7 + 3), then stores 10 back in `a`."
+        },
+        {
+          "id": "m1-d3",
+          "kind": "write",
+          "prompt": "Make an `int` variable called `power` holding `42`, then print `Power: 42` using it.",
+          "code": "#include <stdio.h>\n\nint main(void) {\n    \n    return 0;\n}\n",
+          "tests": [{ "stdin": "", "expected": "Power: 42\n", "visible": true }],
+          "solution": "#include <stdio.h>\n\nint main(void) {\n    int power = 42;\n    printf(\"Power: %d\\n\", power);\n    return 0;\n}\n",
+          "explain": "`int power = 42;` then `printf(\"Power: %d\\n\", power);`."
+        }
+      ]
+    },
+    {
+      "id": "m1-l2",
+      "title": "Listening to the keyboard",
+      "concept": "`scanf` reads what the person types. `scanf(\"%d\", &tanks);` waits for a whole number and puts it in `tanks`.\n\nThe `&` means \"the address of\". You're telling scanf **where the box is** so it can fill it. Forget the `&` and the program reads garbage or crashes.\n\nPlaceholders match printf, with one twist: a double is read with `%lf`. Two at once: `scanf(\"%d %d\", &a, &b);`",
+      "example": {
+        "source": "#include <stdio.h>\n\nint main(void) {\n    int tanks;\n    scanf(\"%d\", &tanks);\n    printf(\"Tanks: %d\\n\", tanks);\n    printf(\"Doubled: %d\\n\", tanks * 2);\n    return 0;\n}\n",
+        "stdin": "21\n"
+      },
+      "predict": {
+        "id": "m1-p2",
+        "kind": "predict",
+        "prompt": "The person types `21`. Before you run it: what does it print?",
+        "code": "#include <stdio.h>\n\nint main(void) {\n    int tanks;\n    scanf(\"%d\", &tanks);\n    printf(\"Tanks: %d\\n\", tanks);\n    printf(\"Doubled: %d\\n\", tanks * 2);\n    return 0;\n}\n",
+        "answer": "Tanks: 21\nDoubled: 42\n",
+        "explain": "scanf puts 21 into `tanks`; after that the program uses it like any other variable.",
+        "warmupEligible": false
+      },
+      "drills": [
+        {
+          "id": "m1-d4",
+          "kind": "fill",
+          "prompt": "scanf needs to know where `fuel` lives.",
+          "code": "int fuel;\nscanf(\"%d\", ___fuel);",
+          "blanks": [["&"]],
+          "explain": "`&fuel` is the address of `fuel`: where scanf should put the number."
+        },
+        {
+          "id": "m1-d5",
+          "kind": "predict",
+          "prompt": "Which line reads a decimal number into `temp`?",
+          "code": "double temp;",
+          "options": ["scanf(\"%lf\", &temp);", "scanf(\"%d\", &temp);", "scanf(\"%lf\", temp);", "printf(\"%lf\", &temp);"],
+          "answer": "scanf(\"%lf\", &temp);",
+          "explain": "A double is read with `%lf`, and scanf always needs the `&`."
+        },
+        {
+          "id": "m1-d6",
+          "kind": "write",
+          "prompt": "Two oxygen tanks report whole numbers. Read both and print `Total: N`, their sum. Input like `3 4` prints `Total: 7`.",
+          "code": "#include <stdio.h>\n\nint main(void) {\n    \n    return 0;\n}\n",
+          "tests": [
+            { "stdin": "3 4\n", "expected": "Total: 7\n", "visible": true },
+            { "stdin": "0 0\n", "expected": "Total: 0\n", "visible": true },
+            { "stdin": "120 380\n", "expected": "Total: 500\n", "visible": false }
+          ],
+          "solution": "#include <stdio.h>\n\nint main(void) {\n    int a, b;\n    scanf(\"%d %d\", &a, &b);\n    printf(\"Total: %d\\n\", a + b);\n    return 0;\n}\n",
+          "explain": "Two variables, one `scanf(\"%d %d\", &a, &b);`, then print `a + b`."
+        }
+      ]
+    },
+    {
+      "id": "m1-l3",
+      "title": "Making numbers look right",
+      "concept": "Placeholders can shape numbers:\n\n`%.2f` prints a double with 2 decimals (rounded) · `%5d` pads a number to 5 characters · `%05d` pads with zeros · `%%` prints a real `%` sign.\n\nValues that never change deserve a name: `#define TANK_LITRES 250` at the top. Before compiling, C swaps every `TANK_LITRES` for `250`. Constant names are written in CAPITALS by habit.",
+      "example": {
+        "source": "#include <stdio.h>\n#define TANK_LITRES 250\n\nint main(void) {\n    double pressure = 101.325;\n    int fuel = 7;\n    printf(\"Pressure: %.1f kPa\\n\", pressure);\n    printf(\"Fuel: %03d%%\\n\", fuel);\n    printf(\"Tank: %d L\\n\", TANK_LITRES);\n    return 0;\n}\n"
+      },
+      "predict": {
+        "id": "m1-p3",
+        "kind": "predict",
+        "prompt": "Before you run it: type what this prints.",
+        "code": "#include <stdio.h>\n#define TANK_LITRES 250\n\nint main(void) {\n    double pressure = 101.325;\n    int fuel = 7;\n    printf(\"Pressure: %.1f kPa\\n\", pressure);\n    printf(\"Fuel: %03d%%\\n\", fuel);\n    printf(\"Tank: %d L\\n\", TANK_LITRES);\n    return 0;\n}\n",
+        "answer": "Pressure: 101.3 kPa\nFuel: 007%\nTank: 250 L\n",
+        "explain": "`%.1f` rounds to one decimal, `%03d` pads 7 to `007`, `%%` prints `%`, and `TANK_LITRES` becomes 250.",
+        "warmupEligible": false
+      },
+      "drills": [
+        {
+          "id": "m1-d7",
+          "kind": "predict",
+          "prompt": "What does this print?",
+          "code": "printf(\"%.2f\\n\", 3.14159);",
+          "options": ["3.14", "3.14159", "3.1", "3"],
+          "answer": "3.14",
+          "explain": "`%.2f` keeps 2 decimals."
+        },
+        {
+          "id": "m1-d8",
+          "kind": "fill",
+          "prompt": "Make it print `Hull: 87%`.",
+          "code": "printf(\"Hull: %d___\\n\", 87);",
+          "blanks": [["%%"]],
+          "explain": "A single `%` starts a placeholder, so a real percent sign is written `%%`."
+        },
+        {
+          "id": "m1-d9",
+          "kind": "fix",
+          "prompt": "It should print `Temp: 21.5` but prints nonsense. Find out why and fix it.",
+          "code": "#include <stdio.h>\n\nint main(void) {\n    double temp = 21.5;\n    printf(\"Temp: %d\\n\", temp);\n    return 0;\n}\n",
+          "tests": [{ "stdin": "", "expected": "Temp: 21.5\n", "visible": true }],
+          "solution": "#include <stdio.h>\n\nint main(void) {\n    double temp = 21.5;\n    printf(\"Temp: %.1f\\n\", temp);\n    return 0;\n}\n",
+          "explain": "`%d` expects an int but `temp` is a double, so printf reads the wrong bits. `%.1f` prints a double with one decimal."
+        },
+        {
+          "id": "m1-d10",
+          "kind": "parsons",
+          "prompt": "Order the lines so it prints `0.667`.",
+          "lines": [
+            { "text": "int main(void) {", "indent": 0 },
+            { "text": "double v = 2.0 / 3.0;", "indent": 1 },
+            { "text": "printf(\"%.3f\\n\", v);", "indent": 1 },
+            { "text": "return 0;", "indent": 1 },
+            { "text": "}", "indent": 0 }
+          ],
+          "explain": "Make the value first, then print it; `return 0;` is always the last line inside `main`."
+        }
+      ]
+    }
+  ],
+  "checkpoint": [
+    {
+      "id": "m1-cp1",
+      "kind": "predict",
+      "prompt": "Which type should hold `3.7`?",
+      "code": "___ reading = 3.7;",
+      "options": ["int", "double", "char"],
+      "answer": "double",
+      "explain": "Decimals go in `double`. An `int` would chop off the `.7`."
+    },
+    {
+      "id": "m1-cp2",
+      "kind": "fill",
+      "prompt": "Fill in the placeholder letter for an int.",
+      "code": "printf(\"%___\\n\", 5);",
+      "blanks": [["d"]],
+      "explain": "`%d` prints an int."
+    },
+    {
+      "id": "m1-cp3",
+      "kind": "predict",
+      "prompt": "Which line reads a whole number into `crew`?",
+      "code": "int crew;",
+      "options": ["scanf(\"%d\", &crew);", "scanf(\"%d\", crew);", "scanf(crew);", "printf(\"%d\", &crew);"],
+      "answer": "scanf(\"%d\", &crew);",
+      "explain": "scanf needs the placeholder and the address `&crew`."
+    },
+    {
+      "id": "m1-cp4",
+      "kind": "predict",
+      "prompt": "Type what this prints.",
+      "code": "printf(\"%.1f%%\\n\", 12.34);",
+      "answer": "12.3%\n",
+      "explain": "One decimal, then `%%` prints a percent sign."
+    },
+    {
+      "id": "m1-cp5",
+      "kind": "parsons",
+      "prompt": "Order the lines so the program prints `Level 3`.",
+      "lines": [
+        { "text": "int main(void) {", "indent": 0 },
+        { "text": "int level = 3;", "indent": 1 },
+        { "text": "printf(\"Level %d\\n\", level);", "indent": 1 },
+        { "text": "return 0;", "indent": 1 },
+        { "text": "}", "indent": 0 }
+      ],
+      "explain": "A variable has to exist before you print it."
+    }
+  ]
+}

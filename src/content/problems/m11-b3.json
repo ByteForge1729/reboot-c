@@ -1,0 +1,50 @@
+{
+  "id": "m11-b3",
+  "title": "Alarm Recorder",
+  "difficulty": "hard",
+  "story": "The alarm system records every alarm in a small buffer and reads it out on request. Handlers have to be quick, so they only **store** what arrived; main does all the printing.\n\nInput: `n` (1–300), then n commands, one per line (X is `INT`, `USR1`, `USR2` or `TERM`):\n- `raise X`: raise that signal.\n- `ignore X`: from now on X is ignored completely.\n- `listen X`: X is recorded again.\n- `flush`: print the recorded alarms, oldest first, separated by spaces (or `(empty)`), then clear the buffer.\n\nAll four are recorded at the start. The buffer holds **8** alarms; an alarm that arrives when it's full is **dropped**.\n\nOutput: one line per flush, then `dropped D`.",
+  "starter": "#include <stdio.h>\n#include <signal.h>\n#include <string.h>\n\n#define CAPACITY 8\n\nint main(void) {\n    int n;\n    scanf(\"%d\", &n);\n    for (int i = 0; i < n; i++) {\n        char cmd[16], name[16] = \"\";\n        scanf(\"%15s\", cmd);\n        if (strcmp(cmd, \"flush\") != 0) scanf(\"%15s\", name);\n    }\n    printf(\"dropped 0\\n\");\n    return 0;\n}\n",
+  "tests": [
+    {
+      "stdin": "4\nraise USR1\nraise INT\nflush\nflush\n",
+      "expected": "USR1 INT\n(empty)\ndropped 0\n",
+      "visible": true
+    },
+    {
+      "stdin": "6\nignore TERM\nraise TERM\nraise USR2\nlisten TERM\nraise TERM\nflush\n",
+      "expected": "USR2 TERM\ndropped 0\n",
+      "visible": true
+    },
+    {
+      "stdin": "13\nraise INT\nraise INT\nraise INT\nraise INT\nraise INT\nraise INT\nraise INT\nraise INT\nraise INT\nraise INT\nflush\nraise USR1\nflush\n",
+      "expected": "INT INT INT INT INT INT INT INT\nUSR1\ndropped 2\n",
+      "visible": true
+    },
+    {
+      "stdin": "1\nflush\n",
+      "expected": "(empty)\ndropped 0\n",
+      "visible": false
+    },
+    {
+      "stdin": "9\nignore INT\nignore USR1\nignore USR2\nignore TERM\nraise INT\nraise TERM\nflush\nlisten USR2\nraise USR2\n",
+      "expected": "(empty)\ndropped 0\n",
+      "visible": false
+    },
+    {
+      "stdin": "14\nraise INT\nraise USR1\nraise USR2\nraise TERM\nraise INT\nraise USR1\nraise USR2\nraise TERM\nraise INT\nignore USR1\nflush\nraise USR1\nraise TERM\nflush\n",
+      "expected": "INT USR1 USR2 TERM INT USR1 USR2 TERM\nTERM\ndropped 1\n",
+      "visible": false
+    },
+    {
+      "stdin": "300\nraise INT\nraise TERM\nlisten USR1\nraise USR1\nraise USR1\nflush\nflush\nraise USR1\nflush\nraise TERM\nraise TERM\nraise TERM\nraise INT\nlisten TERM\nraise TERM\nraise USR1\nraise INT\nraise TERM\nraise USR1\nraise USR1\nraise USR1\nraise INT\nraise INT\nraise USR2\nraise TERM\nlisten USR1\nflush\nignore USR1\nignore USR2\nraise INT\nflush\nraise INT\nraise USR2\nraise USR2\nraise USR1\nraise INT\nignore USR1\nraise TERM\nlisten USR1\nignore TERM\nraise USR1\nraise INT\nraise USR1\nraise INT\nraise USR2\nraise TERM\nraise USR1\nraise USR2\nraise TERM\nraise USR1\nflush\nflush\nignore USR1\nraise USR1\nraise TERM\nraise INT\nignore TERM\nraise USR1\nflush\nraise USR1\nraise INT\nraise USR2\nraise TERM\nraise TERM\nflush\nraise TERM\nraise TERM\nraise TERM\nlisten INT\nraise INT\nraise TERM\nraise INT\nraise TERM\nflush\nignore USR2\nignore TERM\nraise TERM\nraise INT\nignore TERM\nraise TERM\nraise USR1\nraise USR1\nraise INT\nignore INT\nignore USR2\nlisten INT\nraise USR2\nlisten TERM\nflush\nraise USR2\nraise INT\nlisten USR1\nraise TERM\nflush\nraise TERM\nlisten INT\nraise TERM\nraise TERM\nraise TERM\nraise USR2\nraise USR2\nlisten INT\nraise TERM\nraise TERM\nflush\nraise TERM\nraise TERM\nflush\nraise TERM\nraise USR2\nraise USR2\nraise TERM\nraise TERM\nlisten USR1\nflush\nflush\nraise USR2\nraise USR2\nignore USR2\nlisten INT\nraise INT\nraise USR1\nraise TERM\nraise USR1\nraise USR1\nraise USR1\nflush\nignore USR2\nraise TERM\nraise USR2\nraise USR2\nraise INT\nflush\nflush\nraise INT\nignore TERM\nraise TERM\nflush\nflush\nlisten TERM\nflush\nraise INT\nraise USR2\nraise TERM\nlisten TERM\nraise INT\nflush\nflush\nraise USR2\nlisten USR1\nraise INT\nraise INT\nflush\nraise USR1\nignore TERM\nflush\nraise USR1\nraise USR2\nraise USR2\nlisten USR2\nraise TERM\nflush\nignore TERM\nignore USR1\nignore INT\nraise USR1\nignore USR1\nlisten TERM\nraise USR2\nraise USR2\nraise USR2\nlisten INT\nflush\nignore USR2\nraise USR1\nignore INT\nraise TERM\nlisten TERM\nraise USR2\nraise INT\nignore INT\nignore TERM\nraise INT\nraise TERM\nraise USR2\nlisten TERM\nraise USR1\nraise TERM\nignore INT\nraise USR1\nraise TERM\nraise USR1\nraise USR2\nraise USR1\nraise INT\nraise USR1\nignore TERM\nraise INT\nraise INT\nraise TERM\nraise USR2\nflush\nraise TERM\nignore TERM\nraise TERM\nraise USR1\nignore USR2\nraise TERM\nraise INT\nraise USR1\nraise USR1\nraise USR1\nraise USR1\nflush\nraise INT\nraise INT\nraise USR2\nraise USR1\nraise TERM\nignore USR1\nflush\nraise TERM\nraise USR2\nraise TERM\nraise USR1\nraise INT\nraise TERM\nraise USR1\nraise USR2\nraise INT\nraise INT\nraise USR2\nraise TERM\nraise USR2\nflush\nraise USR1\nraise TERM\nflush\nraise USR1\nraise INT\nflush\nraise USR2\nraise USR2\nraise USR1\nflush\nraise TERM\nraise USR1\nraise USR2\nraise USR2\nraise USR2\nflush\nflush\nraise USR2\nraise USR2\nraise TERM\nraise TERM\nraise INT\nraise USR1\nraise USR1\nraise USR1\nlisten USR2\nraise USR2\nraise USR1\nlisten USR1\nraise INT\nflush\nignore USR1\nraise TERM\nignore TERM\nraise USR2\nraise USR1\nraise TERM\nraise USR1\nraise USR1\nraise USR2\nraise INT\nraise USR2\nflush\nraise USR2\nraise USR2\nraise INT\nraise USR1\nraise TERM\nignore INT\nraise TERM\nraise INT\nraise TERM\nraise INT\nflush\nraise TERM\nraise INT\nraise USR2\nraise TERM\nraise USR1\nraise USR2\nraise INT\nraise USR1\nraise USR2\nraise USR2\nraise USR1\n",
+      "expected": "INT TERM USR1 USR1\n(empty)\nUSR1\nTERM TERM TERM INT TERM USR1 INT TERM\nINT\nINT INT TERM USR1 INT USR1 INT USR1\n(empty)\nINT\nINT\nINT INT\nINT INT\nINT TERM\nTERM TERM TERM TERM TERM TERM\nTERM TERM\nTERM TERM TERM\n(empty)\nINT USR1 TERM USR1 USR1 USR1\nTERM INT\n(empty)\nINT\n(empty)\n(empty)\nINT TERM INT\n(empty)\nINT INT\nUSR1\nUSR1\nUSR2 USR2 USR2\nTERM TERM TERM\n(empty)\n(empty)\n(empty)\n(empty)\n(empty)\n(empty)\n(empty)\n(empty)\nUSR2\nUSR2 USR2 USR2\nUSR2 USR2\ndropped 8\n",
+      "visible": false
+    }
+  ],
+  "hints": [
+    "The handler stores the signal number: `if (count < CAPACITY) events[count++] = sig; else dropped++;`, with `events`, `count` and `dropped` as `volatile sig_atomic_t` globals. Install it for all four signals.",
+    "`ignore X` is `signal(sig, SIG_IGN)` and `listen X` is `signal(sig, on_signal)` again. An ignored alarm never reaches the handler, so it's neither stored nor dropped.",
+    "On `flush`, main walks `events[0..count-1]`, turns each number back into its name, prints them space-separated (or `(empty)`), then sets `count = 0`. Write two small helpers: name → signal and signal → name."
+  ],
+  "solution": "#include <stdio.h>\n#include <signal.h>\n#include <string.h>\n\n#define CAPACITY 8\n\nvolatile sig_atomic_t events[CAPACITY];\nvolatile sig_atomic_t count = 0, dropped = 0;\n\nvoid on_signal(int sig) {\n    if (count < CAPACITY) events[count++] = sig;\n    else dropped++;\n}\n\nint signal_of(const char *name) {\n    if (strcmp(name, \"INT\") == 0) return SIGINT;\n    if (strcmp(name, \"USR1\") == 0) return SIGUSR1;\n    if (strcmp(name, \"USR2\") == 0) return SIGUSR2;\n    return SIGTERM;\n}\n\nconst char *name_of(int sig) {\n    if (sig == SIGINT) return \"INT\";\n    if (sig == SIGUSR1) return \"USR1\";\n    if (sig == SIGUSR2) return \"USR2\";\n    return \"TERM\";\n}\n\nint main(void) {\n    const int all[] = { SIGINT, SIGUSR1, SIGUSR2, SIGTERM };\n    for (int i = 0; i < 4; i++) signal(all[i], on_signal);\n\n    int n;\n    scanf(\"%d\", &n);\n    for (int i = 0; i < n; i++) {\n        char cmd[16], name[16] = \"\";\n        scanf(\"%15s\", cmd);\n        if (strcmp(cmd, \"flush\") != 0) scanf(\"%15s\", name);\n\n        if (strcmp(cmd, \"raise\") == 0) {\n            raise(signal_of(name));\n        } else if (strcmp(cmd, \"ignore\") == 0) {\n            signal(signal_of(name), SIG_IGN);\n        } else if (strcmp(cmd, \"listen\") == 0) {\n            signal(signal_of(name), on_signal);\n        } else {\n            if (count == 0) printf(\"(empty)\");\n            for (int j = 0; j < count; j++) printf(\"%s%s\", j > 0 ? \" \" : \"\", name_of(events[j]));\n            printf(\"\\n\");\n            count = 0;\n        }\n    }\n    printf(\"dropped %d\\n\", (int)dropped);\n    return 0;\n}\n"
+}

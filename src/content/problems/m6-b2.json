@@ -1,0 +1,55 @@
+{
+  "id": "m6-b2",
+  "title": "Most Common Cargo",
+  "difficulty": "medium",
+  "story": "The cargo log lists crate type IDs. SIGMA wants the type that shows up most.\n\nInput: first `N` (1–1000), then N whole numbers, each a crate ID from 0 to 99.\n\nOutput: the ID that appears most often. If several tie, print the **smallest** of them.\n\nExample: `5` then `3 1 3 2 1` prints `1` (1 and 3 both appear twice; 1 is smaller).",
+  "starter": "#include <stdio.h>\n\nint main(void) {\n    int n;\n    scanf(\"%d\", &n);\n    // count each ID, then find the most common\n    return 0;\n}\n",
+  "tests": [
+    {
+      "stdin": "5\n3 1 3 2 1\n",
+      "expected": "1\n",
+      "visible": true
+    },
+    {
+      "stdin": "1\n42\n",
+      "expected": "42\n",
+      "visible": true
+    },
+    {
+      "stdin": "6\n7 7 7 0 0 5\n",
+      "expected": "7\n",
+      "visible": true
+    },
+    {
+      "stdin": "4\n99 98 99 98\n",
+      "expected": "98\n",
+      "visible": false
+    },
+    {
+      "stdin": "3\n0 0 0\n",
+      "expected": "0\n",
+      "visible": false
+    },
+    {
+      "stdin": "5\n5 4 3 2 1\n",
+      "expected": "1\n",
+      "visible": false
+    },
+    {
+      "stdin": "7\n10 20 10 20 30 30 30\n",
+      "expected": "30\n",
+      "visible": false
+    },
+    {
+      "stdin": "2\n50 49\n",
+      "expected": "49\n",
+      "visible": false
+    }
+  ],
+  "hints": [
+    "IDs only go from 0 to 99, so keep a counter for each: `int count[100] = {0};`.",
+    "For each ID you read, do `count[id]++`.",
+    "Then loop id from 0 to 99 and keep the first one with the highest count. Using `>` (not `>=`) keeps the smallest on ties."
+  ],
+  "solution": "#include <stdio.h>\n\nint main(void) {\n    int n, count[100] = {0};\n    scanf(\"%d\", &n);\n    for (int i = 0; i < n; i++) {\n        int id;\n        scanf(\"%d\", &id);\n        count[id]++;\n    }\n    int best = 0;\n    for (int id = 1; id < 100; id++) {\n        if (count[id] > count[best]) best = id;\n    }\n    printf(\"%d\\n\", best);\n    return 0;\n}\n"
+}

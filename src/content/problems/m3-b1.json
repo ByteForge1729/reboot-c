@@ -1,0 +1,23 @@
+{
+  "id": "m3-b1",
+  "title": "Airlock Gauge",
+  "difficulty": "easy",
+  "story": "The airlock may only open when the pressure is in the safe band.\n\nInput: one whole number `P`, pressure in kPa (0–200).\n\nOutput: `OPEN` if `95 ≤ P ≤ 105`, `LOW` if P is below 95, `HIGH` if P is above 105.",
+  "starter": "#include <stdio.h>\n\nint main(void) {\n    int pressure;\n    scanf(\"%d\", &pressure);\n    // OPEN, LOW or HIGH\n    return 0;\n}\n",
+  "tests": [
+    { "stdin": "101\n", "expected": "OPEN\n", "visible": true },
+    { "stdin": "80\n", "expected": "LOW\n", "visible": true },
+    { "stdin": "120\n", "expected": "HIGH\n", "visible": true },
+    { "stdin": "95\n", "expected": "OPEN\n", "visible": false },
+    { "stdin": "105\n", "expected": "OPEN\n", "visible": false },
+    { "stdin": "94\n", "expected": "LOW\n", "visible": false },
+    { "stdin": "106\n", "expected": "HIGH\n", "visible": false },
+    { "stdin": "0\n", "expected": "LOW\n", "visible": false }
+  ],
+  "hints": [
+    "Three outcomes means an `if`, an `else if` and an `else`.",
+    "Check LOW first (`pressure < 95`), then HIGH (`pressure > 105`). Whatever's left must be OPEN.",
+    "The edges matter: 95 and 105 are both OPEN. Use `<` and `>`, not `<=` and `>=`, for LOW and HIGH."
+  ],
+  "solution": "#include <stdio.h>\n\nint main(void) {\n    int pressure;\n    scanf(\"%d\", &pressure);\n    if (pressure < 95) {\n        printf(\"LOW\\n\");\n    } else if (pressure > 105) {\n        printf(\"HIGH\\n\");\n    } else {\n        printf(\"OPEN\\n\");\n    }\n    return 0;\n}\n"
+}

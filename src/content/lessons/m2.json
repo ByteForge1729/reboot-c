@@ -1,0 +1,220 @@
+{
+  "missionId": 2,
+  "cheatsheet": "**Arithmetic**\n`+ - * /` and `%` (remainder). `7 / 2` is `3` when both are ints. `7 % 2` is `1`.\n\n**Real division**\nMake one side a double: `7.0 / 2` or `(double)a / b`. `(double)` is a cast.\n\n**Order**\n`* / %` before `+ -`, left to right. Parentheses first.\n\n**Shortcuts**\n`x += 5` means `x = x + 5` (also `-= *= /=`) · `x++` adds 1 · `x--` subtracts 1\n\n**Bits as switches**\n`1 << k` only switch k on · `s | (1 << k)` turn on · `s & (1 << k)` check · `s ^ (1 << k)` flip · `(s >> k) & 1` gives 0 or 1",
+  "lessons": [
+    {
+      "id": "m2-l1",
+      "title": "Arithmetic and the division trap",
+      "concept": "`+ - * /` work like a calculator, with one trap: **dividing two ints throws away the fraction**. `7 / 2` is `3`, not `3.5`.\n\n`%` gives the **remainder**: `7 % 2` is `1`. Handy for \"what's left over\" and \"is it even\".\n\nFor a real division, make one side a double: `7.0 / 2`, or `(double)a / b`. That `(double)` is a **cast**: it converts a value for that one calculation.",
+      "example": {
+        "source": "#include <stdio.h>\n\nint main(void) {\n    int power = 17, modules = 5;\n    printf(\"Each: %d\\n\", power / modules);\n    printf(\"Left over: %d\\n\", power % modules);\n    printf(\"Exact: %.2f\\n\", (double)power / modules);\n    return 0;\n}\n"
+      },
+      "predict": {
+        "id": "m2-p1",
+        "kind": "predict",
+        "prompt": "Before you run it: type what this prints.",
+        "code": "#include <stdio.h>\n\nint main(void) {\n    int power = 17, modules = 5;\n    printf(\"Each: %d\\n\", power / modules);\n    printf(\"Left over: %d\\n\", power % modules);\n    printf(\"Exact: %.2f\\n\", (double)power / modules);\n    return 0;\n}\n",
+        "answer": "Each: 3\nLeft over: 2\nExact: 3.40\n",
+        "explain": "17 / 5 is 3 with 2 left over. The cast makes the last one a real division: 3.4.",
+        "warmupEligible": false
+      },
+      "drills": [
+        {
+          "id": "m2-d1",
+          "kind": "predict",
+          "prompt": "What does this print?",
+          "code": "printf(\"%d\\n\", 9 / 4);",
+          "options": ["2", "2.25", "3", "1"],
+          "answer": "2",
+          "explain": "Both are ints, so the .25 is thrown away. It isn't rounded."
+        },
+        {
+          "id": "m2-d2",
+          "kind": "predict",
+          "prompt": "Type exactly what this prints.",
+          "code": "printf(\"%d %d\\n\", 10 % 3, 12 % 4);",
+          "answer": "1 0\n",
+          "explain": "10 = 3×3 + 1, and 12 = 4×3 + 0."
+        },
+        {
+          "id": "m2-d3",
+          "kind": "fill",
+          "prompt": "Make the division keep its decimals.",
+          "code": "int total = 7, count = 2;\ndouble avg = ___total / count;",
+          "blanks": [["(double)"]],
+          "explain": "Casting one side to double makes the whole division a double division."
+        },
+        {
+          "id": "m2-d4",
+          "kind": "fix",
+          "prompt": "It reads two sensor readings and should print their average, like `Avg: 3.5` for `3 4`. It prints nonsense. Fix it.",
+          "code": "#include <stdio.h>\n\nint main(void) {\n    int a, b;\n    scanf(\"%d %d\", &a, &b);\n    printf(\"Avg: %.1f\\n\", (a + b) / 2);\n    return 0;\n}\n",
+          "tests": [
+            { "stdin": "3 4\n", "expected": "Avg: 3.5\n", "visible": true },
+            { "stdin": "10 10\n", "expected": "Avg: 10.0\n", "visible": true }
+          ],
+          "solution": "#include <stdio.h>\n\nint main(void) {\n    int a, b;\n    scanf(\"%d %d\", &a, &b);\n    printf(\"Avg: %.1f\\n\", (a + b) / 2.0);\n    return 0;\n}\n",
+          "explain": "`(a + b) / 2` is an int division that gives an int, and `%.1f` needs a double. Dividing by `2.0` fixes both."
+        }
+      ]
+    },
+    {
+      "id": "m2-l2",
+      "title": "Order of operations and shortcuts",
+      "concept": "C does `* / %` before `+ -`, left to right, just like maths class. Parentheses go first.\n\nShortcuts you'll see everywhere:\n`x += 5` means `x = x + 5` (also `-=`, `*=`, `/=`).\n`x++` adds 1. `x--` subtracts 1.",
+      "example": {
+        "source": "#include <stdio.h>\n\nint main(void) {\n    int thrust = 2 + 3 * 4;\n    printf(\"%d\\n\", thrust);\n    thrust = (2 + 3) * 4;\n    printf(\"%d\\n\", thrust);\n    thrust += 10;\n    thrust++;\n    printf(\"%d\\n\", thrust);\n    return 0;\n}\n"
+      },
+      "predict": {
+        "id": "m2-p2",
+        "kind": "predict",
+        "prompt": "Before you run it: type the three numbers it prints.",
+        "code": "#include <stdio.h>\n\nint main(void) {\n    int thrust = 2 + 3 * 4;\n    printf(\"%d\\n\", thrust);\n    thrust = (2 + 3) * 4;\n    printf(\"%d\\n\", thrust);\n    thrust += 10;\n    thrust++;\n    printf(\"%d\\n\", thrust);\n    return 0;\n}\n",
+        "answer": "14\n20\n31\n",
+        "explain": "3 × 4 first gives 14. Parentheses first gives 20. Then +10 is 30, and ++ makes 31.",
+        "warmupEligible": false
+      },
+      "drills": [
+        {
+          "id": "m2-d5",
+          "kind": "predict",
+          "prompt": "What does this print?",
+          "code": "printf(\"%d\\n\", 10 - 4 / 2);",
+          "options": ["8", "3", "4", "6"],
+          "answer": "8",
+          "explain": "Division first: 4 / 2 is 2, then 10 − 2."
+        },
+        {
+          "id": "m2-d6",
+          "kind": "predict",
+          "prompt": "Type what this prints.",
+          "code": "int f = 5;\nf *= 3;\nf -= 1;\nf++;\nprintf(\"%d\\n\", f);",
+          "answer": "15\n",
+          "explain": "5 × 3 = 15, minus 1 is 14, plus 1 is 15."
+        },
+        {
+          "id": "m2-d7",
+          "kind": "parsons",
+          "prompt": "Order the lines so it swaps `a` and `b` and prints `2 1`.",
+          "lines": [
+            { "text": "int a = 1, b = 2;", "indent": 0 },
+            { "text": "int temp = a;", "indent": 0 },
+            { "text": "a = b;", "indent": 0 },
+            { "text": "b = temp;", "indent": 0 },
+            { "text": "printf(\"%d %d\\n\", a, b);", "indent": 0 }
+          ],
+          "explain": "Save `a` in `temp` before overwriting it, or its value is gone for good."
+        },
+        {
+          "id": "m2-d8",
+          "kind": "write",
+          "prompt": "Read a number of minutes and print it as hours and minutes. Input `135` prints `2h 15m`.",
+          "code": "#include <stdio.h>\n\nint main(void) {\n    \n    return 0;\n}\n",
+          "tests": [
+            { "stdin": "135\n", "expected": "2h 15m\n", "visible": true },
+            { "stdin": "59\n", "expected": "0h 59m\n", "visible": true },
+            { "stdin": "60\n", "expected": "1h 0m\n", "visible": false },
+            { "stdin": "0\n", "expected": "0h 0m\n", "visible": false },
+            { "stdin": "1439\n", "expected": "23h 59m\n", "visible": false }
+          ],
+          "solution": "#include <stdio.h>\n\nint main(void) {\n    int minutes;\n    scanf(\"%d\", &minutes);\n    printf(\"%dh %dm\\n\", minutes / 60, minutes % 60);\n    return 0;\n}\n",
+          "explain": "`/ 60` gives whole hours and `% 60` gives the minutes left over."
+        }
+      ]
+    },
+    {
+      "id": "m2-l3",
+      "title": "Bits as power switches",
+      "concept": "Inside, every int is a row of **bits**: switches that are 0 or 1. `5` is `101` in binary: switches 0 and 2 are on, counting from the right.\n\n`1 << k` is a number with only switch `k` on.\n`s | (1 << k)` turns switch k on.\n`s & (1 << k)` keeps only switch k (non-zero if it was on).\n`s ^ (1 << k)` flips switch k.\n`(s >> k) & 1` gives exactly 0 or 1.",
+      "example": {
+        "source": "#include <stdio.h>\n\nint main(void) {\n    int status = 5;              // binary 101: switches 0 and 2 on\n    printf(\"%d\\n\", status | 2);  // switch 1 on: 111\n    printf(\"%d\\n\", status & 4);  // keep switch 2: 100\n    printf(\"%d\\n\", status ^ 1);  // flip switch 0: 100\n    printf(\"%d\\n\", 1 << 3);      // only switch 3: 1000\n    return 0;\n}\n"
+      },
+      "predict": {
+        "id": "m2-p3",
+        "kind": "predict",
+        "prompt": "Before you run it: type the four numbers it prints (in decimal).",
+        "code": "#include <stdio.h>\n\nint main(void) {\n    int status = 5;              // binary 101: switches 0 and 2 on\n    printf(\"%d\\n\", status | 2);  // switch 1 on: 111\n    printf(\"%d\\n\", status & 4);  // keep switch 2: 100\n    printf(\"%d\\n\", status ^ 1);  // flip switch 0: 100\n    printf(\"%d\\n\", 1 << 3);      // only switch 3: 1000\n    return 0;\n}\n",
+        "answer": "7\n4\n4\n8\n",
+        "explain": "111 is 7, 100 is 4, 100 is 4 again, 1000 is 8.",
+        "warmupEligible": false
+      },
+      "drills": [
+        {
+          "id": "m2-d9",
+          "kind": "predict",
+          "prompt": "What does this print? (6 is `110`, 3 is `011`.)",
+          "code": "printf(\"%d\\n\", 6 & 3);",
+          "options": ["2", "7", "9", "5"],
+          "answer": "2",
+          "explain": "Only the middle switch is on in both: `010`, which is 2."
+        },
+        {
+          "id": "m2-d10",
+          "kind": "predict",
+          "prompt": "Type what this prints.",
+          "code": "printf(\"%d\\n\", 1 << 4);",
+          "answer": "16\n",
+          "explain": "Switch 4 alone is `10000` in binary: 16."
+        },
+        {
+          "id": "m2-d11",
+          "kind": "fill",
+          "prompt": "Turn switch 3 of `status` on, leaving the others alone.",
+          "code": "status = status ___ (1 << 3);",
+          "blanks": [["|"]],
+          "explain": "`|` turns on every switch that's on in either side."
+        }
+      ]
+    }
+  ],
+  "checkpoint": [
+    {
+      "id": "m2-cp1",
+      "kind": "predict",
+      "prompt": "What does this print?",
+      "code": "printf(\"%d\\n\", 17 / 5);",
+      "options": ["3", "3.4", "4", "2"],
+      "answer": "3",
+      "explain": "int ÷ int drops the fraction."
+    },
+    {
+      "id": "m2-cp2",
+      "kind": "predict",
+      "prompt": "Type what this prints.",
+      "code": "printf(\"%d\\n\", 17 % 5);",
+      "answer": "2\n",
+      "explain": "17 = 5 × 3 + 2."
+    },
+    {
+      "id": "m2-cp3",
+      "kind": "fill",
+      "prompt": "Write the shortcut for `x = x * 4`.",
+      "code": "x ___ 4;",
+      "blanks": [["*="]],
+      "explain": "`x *= 4` multiplies x by 4 in place."
+    },
+    {
+      "id": "m2-cp4",
+      "kind": "predict",
+      "prompt": "What does this print?",
+      "code": "printf(\"%d\\n\", 2 + 3 * 2);",
+      "options": ["8", "10", "12", "7"],
+      "answer": "8",
+      "explain": "Multiplication first: 3 × 2 = 6, plus 2."
+    },
+    {
+      "id": "m2-cp5",
+      "kind": "predict",
+      "prompt": "With `a = 5` and `b = 2`, which line prints `2.50`?",
+      "code": "int a = 5, b = 2;",
+      "options": [
+        "printf(\"%.2f\\n\", (double)a / b);",
+        "printf(\"%.2f\\n\", a / b);",
+        "printf(\"%d\\n\", a / b);",
+        "printf(\"%.2f\\n\", (double)(a / b));"
+      ],
+      "answer": "printf(\"%.2f\\n\", (double)a / b);",
+      "explain": "Cast before dividing. `(double)(a / b)` casts too late, after the fraction is already gone."
+    }
+  ]
+}

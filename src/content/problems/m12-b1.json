@@ -1,0 +1,50 @@
+{
+  "id": "m12-b1",
+  "title": "Echo Beacon",
+  "difficulty": "easy",
+  "story": "First contact: the station sends a message to the beacon, and the beacon has to echo it back **reversed**, so the station knows the round trip worked.\n\nThe station (parent) is written for you: it sends the line, calls `shutdown`, then reads the reply until the beacon hangs up. Write the beacon's `serve(fd)`.\n\nInput: one line of up to 100 characters (it may contain spaces).\n\nOutput: `echo: ` and the reversed line.\n\nExample: `help us` prints `echo: su pleh`.",
+  "starter": "#include <stdio.h>\n#include <string.h>\n#include <sys/socket.h>\n#include <sys/wait.h>\n#include <unistd.h>\n\n// The beacon: receive everything until the station hangs up, send it back reversed.\nvoid serve(int fd) {\n    // recv until it returns 0, reverse, send back\n}\n\nint main(void) {\n    int fds[2];\n    if (socketpair(AF_UNIX, SOCK_STREAM, 0, fds) == -1) {\n        perror(\"socketpair\");\n        return 1;\n    }\n    pid_t pid = fork();\n    if (pid == -1) {\n        perror(\"fork\");\n        return 1;\n    }\n    if (pid == 0) {\n        close(fds[0]);\n        serve(fds[1]);\n        close(fds[1]);\n        _exit(0);\n    }\n    close(fds[1]);\n\n    char msg[128];\n    if (fgets(msg, sizeof msg, stdin) == NULL) msg[0] = '\\0';\n    msg[strcspn(msg, \"\\n\")] = '\\0';\n    send(fds[0], msg, strlen(msg), 0);\n    shutdown(fds[0], SHUT_WR);\n\n    char reply[128];\n    size_t got = 0;\n    ssize_t n;\n    while ((n = recv(fds[0], reply + got, sizeof reply - 1 - got, 0)) > 0) got += n;\n    reply[got] = '\\0';\n    waitpid(pid, NULL, 0);\n    printf(\"echo: %s\\n\", reply);\n    close(fds[0]);\n    return 0;\n}\n",
+  "tests": [
+    {
+      "stdin": "help us\n",
+      "expected": "echo: su pleh\n",
+      "visible": true
+    },
+    {
+      "stdin": "MAYDAY\n",
+      "expected": "echo: YADYAM\n",
+      "visible": true
+    },
+    {
+      "stdin": "a\n",
+      "expected": "echo: a\n",
+      "visible": true
+    },
+    {
+      "stdin": "racecar\n",
+      "expected": "echo: racecar\n",
+      "visible": false
+    },
+    {
+      "stdin": "12345 abc\n",
+      "expected": "echo: cba 54321\n",
+      "visible": false
+    },
+    {
+      "stdin": "Beacon online. Do you read?\n",
+      "expected": "echo: ?daer uoy oD .enilno nocaeB\n",
+      "visible": false
+    },
+    {
+      "stdin": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy\n",
+      "expected": "echo: yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n",
+      "visible": false
+    }
+  ],
+  "hints": [
+    "The station sends everything, then shuts down its side, so loop `recv(fd, buf + got, sizeof buf - got, 0)` and add each count to `got` until recv returns 0.",
+    "Reverse in place: swap `buf[i]` and `buf[got - 1 - i]` for i from 0 to `got / 2`.",
+    "Send back exactly `got` bytes with `send(fd, buf, got, 0)`. No '\\0' is needed: the station adds its own."
+  ],
+  "solution": "#include <stdio.h>\n#include <string.h>\n#include <sys/socket.h>\n#include <sys/wait.h>\n#include <unistd.h>\n\n// The beacon: receive everything until the station hangs up, send it back reversed.\nvoid serve(int fd) {\n    char buf[128];\n    size_t got = 0;\n    ssize_t n;\n    while ((n = recv(fd, buf + got, sizeof buf - got, 0)) > 0) got += n;\n    for (size_t i = 0; i < got / 2; i++) {\n        char tmp = buf[i];\n        buf[i] = buf[got - 1 - i];\n        buf[got - 1 - i] = tmp;\n    }\n    send(fd, buf, got, 0);\n}\n\nint main(void) {\n    int fds[2];\n    if (socketpair(AF_UNIX, SOCK_STREAM, 0, fds) == -1) {\n        perror(\"socketpair\");\n        return 1;\n    }\n    pid_t pid = fork();\n    if (pid == -1) {\n        perror(\"fork\");\n        return 1;\n    }\n    if (pid == 0) {\n        close(fds[0]);\n        serve(fds[1]);\n        close(fds[1]);\n        _exit(0);\n    }\n    close(fds[1]);\n\n    char msg[128];\n    if (fgets(msg, sizeof msg, stdin) == NULL) msg[0] = '\\0';\n    msg[strcspn(msg, \"\\n\")] = '\\0';\n    send(fds[0], msg, strlen(msg), 0);\n    shutdown(fds[0], SHUT_WR);\n\n    char reply[128];\n    size_t got = 0;\n    ssize_t n;\n    while ((n = recv(fds[0], reply + got, sizeof reply - 1 - got, 0)) > 0) got += n;\n    reply[got] = '\\0';\n    waitpid(pid, NULL, 0);\n    printf(\"echo: %s\\n\", reply);\n    close(fds[0]);\n    return 0;\n}\n"
+}

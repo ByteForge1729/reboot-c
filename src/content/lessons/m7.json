@@ -1,0 +1,275 @@
+{
+  "missionId": 7,
+  "cheatsheet": "**Addresses**\n`&x` is where x lives. `int *p = &x;` makes p point at x.\n\n**Following a pointer**\n`*p` is the box p points at: read it (`*p + 1`) or change it (`*p = 75;`).\n\n**Changing the caller's variable**\n`void refill(int *tank) { *tank = 100; }` called as `refill(&fuel);`, the same reason scanf needs `&`.\n\n**Pointers and arrays**\nAn array's name is the address of element 0. `p + 1` is the next element. `*(p + i)` is the same as `p[i]`.\n\n**Structs**\n`typedef struct { char name[20]; int age; } Crew;` · `pilot.age` on a struct · `c->age` through a pointer (`(*c).age`)",
+  "lessons": [
+    {
+      "id": "m7-l1",
+      "title": "Every box has an address",
+      "concept": "Every variable lives somewhere in memory, at an **address**. `&fuel` gives you that address.\n\nA **pointer** is a variable that holds an address: `int *p = &fuel;` reads \"p points at fuel\".\n\nPut `*` in front of a pointer to **follow** it: `*p` is the box p points at. You can read it, or change it. Changing `*p` changes `fuel` itself.",
+      "example": {
+        "source": "#include <stdio.h>\n\nint main(void) {\n    int fuel = 40;\n    int *p = &fuel;\n    printf(\"fuel: %d\\n\", fuel);\n    printf(\"via p: %d\\n\", *p);\n    *p = 75;\n    printf(\"fuel now: %d\\n\", fuel);\n    return 0;\n}\n"
+      },
+      "predict": {
+        "id": "m7-p1",
+        "kind": "predict",
+        "prompt": "Before you run it: type what it prints.",
+        "code": "#include <stdio.h>\n\nint main(void) {\n    int fuel = 40;\n    int *p = &fuel;\n    printf(\"fuel: %d\\n\", fuel);\n    printf(\"via p: %d\\n\", *p);\n    *p = 75;\n    printf(\"fuel now: %d\\n\", fuel);\n    return 0;\n}\n",
+        "answer": "fuel: 40\nvia p: 40\nfuel now: 75\n",
+        "explain": "`*p` is fuel's box. Writing 75 through p changes fuel itself.",
+        "warmupEligible": false
+      },
+      "drills": [
+        {
+          "id": "m7-d1",
+          "kind": "predict",
+          "prompt": "What does this print?",
+          "code": "int a = 3;\nint *p = &a;\n*p = *p + 2;\nprintf(\"%d\\n\", a);",
+          "options": ["5", "3", "2", "An address"],
+          "answer": "5",
+          "explain": "`*p` is `a`, so this is `a = a + 2`."
+        },
+        {
+          "id": "m7-d2",
+          "kind": "fill",
+          "prompt": "Declare `p` as a pointer to an int.",
+          "code": "int x = 9;\nint ___p = &x;",
+          "blanks": [["*"]],
+          "explain": "`int *p` means \"p holds the address of an int\"."
+        },
+        {
+          "id": "m7-d3",
+          "kind": "predict",
+          "prompt": "Type what this prints. (Watch where `p` points when the 10 is written.)",
+          "code": "int a = 1, b = 2;\nint *p = &a;\np = &b;\n*p = 10;\nprintf(\"%d %d\\n\", a, b);",
+          "answer": "1 10\n",
+          "explain": "p was moved to point at b before the write, so only b changes."
+        },
+        {
+          "id": "m7-d4",
+          "kind": "predict",
+          "prompt": "What does `&x` give you?",
+          "code": "int x = 7;",
+          "options": ["Where x lives in memory", "The value of x", "x times 2", "A copy of x"],
+          "answer": "Where x lives in memory",
+          "explain": "`&` means \"address of\"."
+        }
+      ]
+    },
+    {
+      "id": "m7-l2",
+      "title": "Letting a function change your variables",
+      "concept": "Remember that parameters are copies? To let a function change **your** variable, give it the address instead: `refill(&main_tank);`\n\nThe function takes a pointer, `void refill(int *tank)`, and writes through it: `*tank = 100;`.\n\nThat's exactly why `scanf` needs `&`: you hand it the address so it can fill your variable.",
+      "example": {
+        "source": "#include <stdio.h>\n\nvoid refill(int *tank) {\n    *tank = 100;\n}\n\nvoid swap(int *a, int *b) {\n    int temp = *a;\n    *a = *b;\n    *b = temp;\n}\n\nint main(void) {\n    int main_tank = 12, spare = 3;\n    refill(&main_tank);\n    swap(&main_tank, &spare);\n    printf(\"%d %d\\n\", main_tank, spare);\n    return 0;\n}\n"
+      },
+      "predict": {
+        "id": "m7-p2",
+        "kind": "predict",
+        "prompt": "Before you run it: type what it prints.",
+        "code": "#include <stdio.h>\n\nvoid refill(int *tank) {\n    *tank = 100;\n}\n\nvoid swap(int *a, int *b) {\n    int temp = *a;\n    *a = *b;\n    *b = temp;\n}\n\nint main(void) {\n    int main_tank = 12, spare = 3;\n    refill(&main_tank);\n    swap(&main_tank, &spare);\n    printf(\"%d %d\\n\", main_tank, spare);\n    return 0;\n}\n",
+        "answer": "3 100\n",
+        "explain": "refill makes main_tank 100, then swap trades it with spare's 3.",
+        "warmupEligible": false
+      },
+      "drills": [
+        {
+          "id": "m7-d5",
+          "kind": "fix",
+          "prompt": "`swap` should swap the two numbers, but they come out unchanged. Fix it.",
+          "code": "#include <stdio.h>\n\nvoid swap(int a, int b) {\n    int temp = a;\n    a = b;\n    b = temp;\n}\n\nint main(void) {\n    int x, y;\n    scanf(\"%d %d\", &x, &y);\n    swap(x, y);\n    printf(\"%d %d\\n\", x, y);\n    return 0;\n}\n",
+          "tests": [
+            { "stdin": "1 2\n", "expected": "2 1\n", "visible": true },
+            { "stdin": "5 9\n", "expected": "9 5\n", "visible": true }
+          ],
+          "solution": "#include <stdio.h>\n\nvoid swap(int *a, int *b) {\n    int temp = *a;\n    *a = *b;\n    *b = temp;\n}\n\nint main(void) {\n    int x, y;\n    scanf(\"%d %d\", &x, &y);\n    swap(&x, &y);\n    printf(\"%d %d\\n\", x, y);\n    return 0;\n}\n",
+          "explain": "It swapped its copies. Take pointers (`int *a, int *b`), write through them with `*`, and call it with `swap(&x, &y)`."
+        },
+        {
+          "id": "m7-d6",
+          "kind": "parsons",
+          "prompt": "Order and indent the lines into a program that prints `15`.",
+          "lines": [
+            { "text": "void addTen(int *n) {", "indent": 0 },
+            { "text": "*n += 10;", "indent": 1 },
+            { "text": "}", "indent": 0 },
+            { "text": "int main(void) {", "indent": 0 },
+            { "text": "int x = 5;", "indent": 1 },
+            { "text": "addTen(&x);", "indent": 1 },
+            { "text": "printf(\"%d\\n\", x);", "indent": 1 },
+            { "text": "return 0;", "indent": 1 },
+            { "text": "}", "indent": 0 }
+          ],
+          "explain": "Function above main; inside main make x, pass its address, then print."
+        },
+        {
+          "id": "m7-d7",
+          "kind": "predict",
+          "prompt": "Type what this prints.",
+          "code": "void twice(int *v) {\n    *v *= 2;\n}\n\nint n = 4;\ntwice(&n);\ntwice(&n);\nprintf(\"%d\\n\", n);",
+          "answer": "16\n",
+          "explain": "Each call doubles n itself: 4 → 8 → 16."
+        },
+        {
+          "id": "m7-d8",
+          "kind": "write",
+          "prompt": "Finish `minmax`: store the smallest of a, b, c in `*lo` and the largest in `*hi`. `main` is done.",
+          "code": "#include <stdio.h>\n\nvoid minmax(int a, int b, int c, int *lo, int *hi) {\n    // set *lo and *hi\n}\n\nint main(void) {\n    int a, b, c, lo = 0, hi = 0;\n    scanf(\"%d %d %d\", &a, &b, &c);\n    minmax(a, b, c, &lo, &hi);\n    printf(\"%d %d\\n\", lo, hi);\n    return 0;\n}\n",
+          "tests": [
+            { "stdin": "3 1 2\n", "expected": "1 3\n", "visible": true },
+            { "stdin": "5 5 5\n", "expected": "5 5\n", "visible": true },
+            { "stdin": "-1 7 0\n", "expected": "-1 7\n", "visible": false },
+            { "stdin": "9 8 7\n", "expected": "7 9\n", "visible": false }
+          ],
+          "solution": "#include <stdio.h>\n\nvoid minmax(int a, int b, int c, int *lo, int *hi) {\n    *lo = a;\n    *hi = a;\n    if (b < *lo) *lo = b;\n    if (c < *lo) *lo = c;\n    if (b > *hi) *hi = b;\n    if (c > *hi) *hi = c;\n}\n\nint main(void) {\n    int a, b, c, lo = 0, hi = 0;\n    scanf(\"%d %d %d\", &a, &b, &c);\n    minmax(a, b, c, &lo, &hi);\n    printf(\"%d %d\\n\", lo, hi);\n    return 0;\n}\n",
+          "explain": "A function can only `return` one value. Writing through pointers lets it hand back two."
+        }
+      ]
+    },
+    {
+      "id": "m7-l3",
+      "title": "Walking through arrays with pointers",
+      "concept": "An array's name is the **address of its first element**, so `int *p = readings;` points at `readings[0]`.\n\n`p + 1` points at the **next element** (C knows how big an int is). `*(p + 2)` is the element two along, which is exactly what `p[2]` means.\n\nThat's also how arrays reach functions: `int sum(int *arr, int n)` gets the start address, so you also pass how many elements there are.",
+      "example": {
+        "source": "#include <stdio.h>\n\nint main(void) {\n    int readings[4] = {10, 20, 30, 40};\n    int *p = readings;\n    printf(\"%d\\n\", *p);\n    printf(\"%d\\n\", *(p + 2));\n    p++;\n    printf(\"%d\\n\", *p);\n    printf(\"%d\\n\", p[1]);\n    return 0;\n}\n"
+      },
+      "predict": {
+        "id": "m7-p3",
+        "kind": "predict",
+        "prompt": "Before you run it: type the four numbers it prints.",
+        "code": "#include <stdio.h>\n\nint main(void) {\n    int readings[4] = {10, 20, 30, 40};\n    int *p = readings;\n    printf(\"%d\\n\", *p);\n    printf(\"%d\\n\", *(p + 2));\n    p++;\n    printf(\"%d\\n\", *p);\n    printf(\"%d\\n\", p[1]);\n    return 0;\n}\n",
+        "answer": "10\n30\n20\n30\n",
+        "explain": "p starts at element 0. After `p++` it points at element 1, so `p[1]` means element 2.",
+        "warmupEligible": false
+      },
+      "drills": [
+        {
+          "id": "m7-d9",
+          "kind": "predict",
+          "prompt": "What does this print?",
+          "code": "int a[] = {5, 6, 7};\nint *p = a + 1;\nprintf(\"%d\\n\", *p);",
+          "options": ["6", "5", "7", "An address"],
+          "answer": "6",
+          "explain": "`a + 1` is the address of the second element."
+        },
+        {
+          "id": "m7-d10",
+          "kind": "predict",
+          "prompt": "Type what this prints.",
+          "code": "int a[] = {1, 2, 3, 4};\nint *p = a;\nint s = 0;\nwhile (p < a + 4) {\n    s += *p;\n    p += 2;\n}\nprintf(\"%d\\n\", s);",
+          "answer": "4\n",
+          "explain": "It jumps two elements at a time: a[0] + a[2] = 1 + 3."
+        },
+        {
+          "id": "m7-d11",
+          "kind": "fill",
+          "prompt": "Add up the elements `arr` points to.",
+          "code": "int sum(int *arr, int n) {\n    int s = 0;\n    for (int i = 0; i < n; i++) {\n        s += ___;\n    }\n    return s;\n}",
+          "blanks": [["arr[i]", "*(arr + i)", "*(arr+i)"]],
+          "explain": "`arr[i]` and `*(arr + i)` mean the same thing."
+        },
+        {
+          "id": "m7-d12",
+          "kind": "write",
+          "prompt": "Finish `count_above`: return how many of the n numbers are greater than `limit`. `main` reads n, the numbers, then limit.",
+          "code": "#include <stdio.h>\n\nint count_above(int *arr, int n, int limit) {\n    return 0; // replace this\n}\n\nint main(void) {\n    int n, limit, a[100];\n    scanf(\"%d\", &n);\n    for (int i = 0; i < n; i++) {\n        scanf(\"%d\", &a[i]);\n    }\n    scanf(\"%d\", &limit);\n    printf(\"%d\\n\", count_above(a, n, limit));\n    return 0;\n}\n",
+          "tests": [
+            { "stdin": "5\n1 9 3 7 5\n4\n", "expected": "3\n", "visible": true },
+            { "stdin": "3\n1 2 3\n10\n", "expected": "0\n", "visible": true },
+            { "stdin": "4\n-1 -2 -3 -4\n-3\n", "expected": "2\n", "visible": false },
+            { "stdin": "1\n5\n5\n", "expected": "0\n", "visible": false }
+          ],
+          "solution": "#include <stdio.h>\n\nint count_above(int *arr, int n, int limit) {\n    int count = 0;\n    for (int i = 0; i < n; i++) {\n        if (arr[i] > limit) count++;\n    }\n    return count;\n}\n\nint main(void) {\n    int n, limit, a[100];\n    scanf(\"%d\", &n);\n    for (int i = 0; i < n; i++) {\n        scanf(\"%d\", &a[i]);\n    }\n    scanf(\"%d\", &limit);\n    printf(\"%d\\n\", count_above(a, n, limit));\n    return 0;\n}\n",
+          "explain": "The pointer works like the array: loop i from 0 to n − 1 and count `arr[i] > limit`. \"Greater than\" means 5 isn't above 5."
+        }
+      ]
+    },
+    {
+      "id": "m7-l4",
+      "title": "Structures: crew records",
+      "concept": "A **struct** bundles related values into one thing:\n\n`typedef struct { char name[20]; int age; } Crew;`\n\nNow `Crew` is a type. `Crew pilot = {\"Mira\", 31};` makes one, and `pilot.age` reaches inside with a dot.\n\nThrough a pointer, use an arrow: `c->age` (short for `(*c).age`). Pass a pointer when a function should change the record.",
+      "example": {
+        "source": "#include <stdio.h>\n\ntypedef struct {\n    char name[20];\n    int age;\n} Crew;\n\nvoid birthday(Crew *c) {\n    c->age++;\n}\n\nint main(void) {\n    Crew pilot = {\"Mira\", 31};\n    birthday(&pilot);\n    printf(\"%s is %d\\n\", pilot.name, pilot.age);\n    return 0;\n}\n"
+      },
+      "predict": {
+        "id": "m7-p4",
+        "kind": "predict",
+        "prompt": "Before you run it: type what it prints.",
+        "code": "#include <stdio.h>\n\ntypedef struct {\n    char name[20];\n    int age;\n} Crew;\n\nvoid birthday(Crew *c) {\n    c->age++;\n}\n\nint main(void) {\n    Crew pilot = {\"Mira\", 31};\n    birthday(&pilot);\n    printf(\"%s is %d\\n\", pilot.name, pilot.age);\n    return 0;\n}\n",
+        "answer": "Mira is 32\n",
+        "explain": "birthday got the record's address, so `c->age++` changed pilot's own age.",
+        "warmupEligible": false
+      },
+      "drills": [
+        {
+          "id": "m7-d13",
+          "kind": "predict",
+          "prompt": "What does this print?",
+          "code": "struct pt { int x, y; };\nstruct pt a = {3, 4};\nprintf(\"%d\\n\", a.x + a.y);",
+          "options": ["7", "34", "12", "It won't compile"],
+          "answer": "7",
+          "explain": "`a.x` is 3 and `a.y` is 4."
+        },
+        {
+          "id": "m7-d14",
+          "kind": "fill",
+          "prompt": "`c` is a pointer to a Crew. Reach its age.",
+          "code": "Crew *c = &pilot;\nprintf(\"%d\\n\", c___age);",
+          "blanks": [["->"]],
+          "explain": "Through a pointer, use `->`. (`(*c).age` means the same.)"
+        },
+        {
+          "id": "m7-d15",
+          "kind": "predict",
+          "prompt": "Type what this prints.",
+          "code": "struct box { int w, h; };\nstruct box b[2] = {{1, 2}, {3, 4}};\nprintf(\"%d\\n\", b[1].w * b[0].h);",
+          "answer": "6\n",
+          "explain": "b[1].w is 3 and b[0].h is 2."
+        }
+      ]
+    }
+  ],
+  "checkpoint": [
+    {
+      "id": "m7-cp1",
+      "kind": "predict",
+      "prompt": "With `int *p = &x;`, which line prints x's value?",
+      "code": "int x = 5;\nint *p = &x;",
+      "options": ["printf(\"%d\", *p);", "printf(\"%d\", p);", "printf(\"%d\", &p);", "printf(\"%d\", &x);"],
+      "answer": "printf(\"%d\", *p);",
+      "explain": "`*p` follows the pointer to the value. The others print addresses."
+    },
+    {
+      "id": "m7-cp2",
+      "kind": "predict",
+      "prompt": "Type what this prints.",
+      "code": "int v = 2;\nint *p = &v;\n*p = *p * 10;\nprintf(\"%d\\n\", v);",
+      "answer": "20\n",
+      "explain": "Writing through p changes v."
+    },
+    {
+      "id": "m7-cp3",
+      "kind": "predict",
+      "prompt": "Why does `scanf(\"%d\", &n);` need the `&`?",
+      "code": "int n;\nscanf(\"%d\", &n);",
+      "options": ["So scanf can fill n through its address", "To make it faster", "Because scanf returns a pointer", "It doesn't; & is optional"],
+      "answer": "So scanf can fill n through its address",
+      "explain": "Like any function, scanf only gets copies, so it needs the address to change n."
+    },
+    {
+      "id": "m7-cp4",
+      "kind": "predict",
+      "prompt": "Type what this prints.",
+      "code": "int a[] = {3, 6, 9};\nprintf(\"%d\\n\", *(a + 2));",
+      "answer": "9\n",
+      "explain": "`*(a + 2)` is a[2]."
+    },
+    {
+      "id": "m7-cp5",
+      "kind": "fill",
+      "prompt": "`s` is a struct (not a pointer). Set its speed.",
+      "code": "struct ship s;\ns___speed = 10;",
+      "blanks": [["."]],
+      "explain": "A dot on a struct, an arrow through a pointer."
+    }
+  ]
+}

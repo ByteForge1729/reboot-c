@@ -1,0 +1,23 @@
+{
+  "id": "m1-b2",
+  "title": "Kelvin Readout",
+  "difficulty": "medium",
+  "story": "The thermal sensors speak Celsius, but the reactor controller only accepts Kelvin.\n\nInput: one decimal number `C`, a temperature in Celsius. `-273.15 ≤ C ≤ 1000`.\n\nOutput: `K: X` where `X = C + 273.15`, printed with exactly 2 decimals.\n\nExample: `21.5` prints `K: 294.65`.",
+  "starter": "#include <stdio.h>\n\nint main(void) {\n    double celsius;\n    // read celsius, convert, print\n    return 0;\n}\n",
+  "tests": [
+    { "stdin": "21.5\n", "expected": "K: 294.65\n", "visible": true },
+    { "stdin": "-273.15\n", "expected": "K: 0.00\n", "visible": true },
+    { "stdin": "0\n", "expected": "K: 273.15\n", "visible": true },
+    { "stdin": "100\n", "expected": "K: 373.15\n", "visible": false },
+    { "stdin": "-40\n", "expected": "K: 233.15\n", "visible": false },
+    { "stdin": "36.6\n", "expected": "K: 309.75\n", "visible": false },
+    { "stdin": "1000\n", "expected": "K: 1273.15\n", "visible": false },
+    { "stdin": "-0.5\n", "expected": "K: 272.65\n", "visible": false }
+  ],
+  "hints": [
+    "Reading a double needs `%lf` in scanf, not `%d` and not `%f`.",
+    "Add 273.15 to the number you read and store it in another double.",
+    "`%.2f` prints exactly two decimals: `printf(\"K: %.2f\\n\", kelvin);`"
+  ],
+  "solution": "#include <stdio.h>\n\nint main(void) {\n    double celsius;\n    scanf(\"%lf\", &celsius);\n    double kelvin = celsius + 273.15;\n    printf(\"K: %.2f\\n\", kelvin);\n    return 0;\n}\n"
+}

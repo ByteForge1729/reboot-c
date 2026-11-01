@@ -1,0 +1,23 @@
+{
+  "id": "m2-b3",
+  "title": "Breaker Panel",
+  "difficulty": "hard",
+  "story": "The power grid's breaker panel is one number: 8 switches stored as the bits of `S`, switch 0 on the right. SIGMA wants to inspect a switch and know what the panel would read if it were flipped.\n\nInput: two whole numbers `S` (0–255) and `K` (0–7).\n\nOutput, two lines:\n`switch K: B`, where `B` is `1` if switch K is on, else `0`\n`flipped: F`, the value of S with switch K flipped\n\nExample: `5 1` prints `switch 1: 0` then `flipped: 7`.",
+  "starter": "#include <stdio.h>\n\nint main(void) {\n    int status, k;\n    scanf(\"%d %d\", &status, &k);\n    // inspect switch k, then flip it\n    return 0;\n}\n",
+  "tests": [
+    { "stdin": "5 0\n", "expected": "switch 0: 1\nflipped: 4\n", "visible": true },
+    { "stdin": "5 1\n", "expected": "switch 1: 0\nflipped: 7\n", "visible": true },
+    { "stdin": "0 7\n", "expected": "switch 7: 0\nflipped: 128\n", "visible": true },
+    { "stdin": "255 7\n", "expected": "switch 7: 1\nflipped: 127\n", "visible": false },
+    { "stdin": "255 0\n", "expected": "switch 0: 1\nflipped: 254\n", "visible": false },
+    { "stdin": "128 7\n", "expected": "switch 7: 1\nflipped: 0\n", "visible": false },
+    { "stdin": "170 4\n", "expected": "switch 4: 0\nflipped: 186\n", "visible": false },
+    { "stdin": "85 6\n", "expected": "switch 6: 1\nflipped: 21\n", "visible": false }
+  ],
+  "hints": [
+    "`1 << k` is a number with only switch k on. `^` flips exactly the switches that are on in its right side.",
+    "`status & (1 << k)` is non-zero when switch k is on, but it's `2^k`, not `1`. Hidden tests check switch 7, so that matters.",
+    "Shift first, then keep the last bit: `(status >> k) & 1` is exactly 0 or 1."
+  ],
+  "solution": "#include <stdio.h>\n\nint main(void) {\n    int status, k;\n    scanf(\"%d %d\", &status, &k);\n    printf(\"switch %d: %d\\n\", k, (status >> k) & 1);\n    printf(\"flipped: %d\\n\", status ^ (1 << k));\n    return 0;\n}\n"
+}

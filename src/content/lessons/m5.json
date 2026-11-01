@@ -1,0 +1,212 @@
+{
+  "missionId": 5,
+  "cheatsheet": "**A function**\n`int doubled(int x) { return x * 2; }`: return type, name, parameters, body.\n`void` = gives nothing back (or takes nothing).\n\n**Order**\nDefine (or declare) a function above the code that calls it. Declaration: `int doubled(int x);`\n\n**Parameters are copies**\nChanging a parameter doesn't change the caller's variable.\n\n**static**\n`static int calls = 0;` inside a function keeps its value between calls.\n\n**Recursion**\nA function calling itself. It always needs a base case that stops it.",
+  "lessons": [
+    {
+      "id": "m5-l1",
+      "title": "Build your own commands",
+      "concept": "A **function** is a named mini-program you can run again and again. You've been using them (`printf`, `scanf`). Now you write your own:\n\n`int doubled(int x) { return x * 2; }`\n\n**What it gives back** (`int`), its **name**, what it **takes in** (`int x`), and the **body**. `return` hands a value back to whoever called it. `void` means \"gives nothing back\".\n\nC reads top to bottom, so write a function **above** the code that calls it.",
+      "example": {
+        "source": "#include <stdio.h>\n\nint doubled(int x) {\n    return x * 2;\n}\n\nvoid beep(void) {\n    printf(\"beep\\n\");\n}\n\nint main(void) {\n    beep();\n    printf(\"%d\\n\", doubled(21));\n    return 0;\n}\n"
+      },
+      "predict": {
+        "id": "m5-p1",
+        "kind": "predict",
+        "prompt": "Before you run it: type what it prints.",
+        "code": "#include <stdio.h>\n\nint doubled(int x) {\n    return x * 2;\n}\n\nvoid beep(void) {\n    printf(\"beep\\n\");\n}\n\nint main(void) {\n    beep();\n    printf(\"%d\\n\", doubled(21));\n    return 0;\n}\n",
+        "answer": "beep\n42\n",
+        "explain": "The program still starts at `main`. It calls `beep`, then calls `doubled(21)` and prints what comes back.",
+        "warmupEligible": false
+      },
+      "drills": [
+        {
+          "id": "m5-d1",
+          "kind": "predict",
+          "prompt": "What does this print?",
+          "code": "int add(int a, int b) {\n    return a + b;\n}\n\nprintf(\"%d\\n\", add(2, add(3, 4)));",
+          "options": ["9", "7", "234", "5"],
+          "answer": "9",
+          "explain": "The inner call runs first: add(3, 4) is 7, then add(2, 7) is 9."
+        },
+        {
+          "id": "m5-d2",
+          "kind": "fill",
+          "prompt": "What type of value does `square` give back?",
+          "code": "___ square(int n) {\n    return n * n;\n}",
+          "blanks": [["int"]],
+          "explain": "It returns `n * n`, an int."
+        },
+        {
+          "id": "m5-d3",
+          "kind": "fix",
+          "prompt": "It should print `Fuel: 15` but won't compile. Read the error and fix it.",
+          "code": "#include <stdio.h>\n\nint main(void) {\n    printf(\"Fuel: %d\\n\", refuel(5));\n    return 0;\n}\n\nint refuel(int x) {\n    return x + 10;\n}\n",
+          "tests": [{ "stdin": "", "expected": "Fuel: 15\n", "visible": true }],
+          "solution": "#include <stdio.h>\n\nint refuel(int x) {\n    return x + 10;\n}\n\nint main(void) {\n    printf(\"Fuel: %d\\n\", refuel(5));\n    return 0;\n}\n",
+          "explain": "`main` uses `refuel` before C has seen it. Move `refuel` above `main`, or add the line `int refuel(int x);` above `main`."
+        },
+        {
+          "id": "m5-d4",
+          "kind": "write",
+          "prompt": "Finish `max3` so it returns the largest of its three numbers. `main` is already done.",
+          "code": "#include <stdio.h>\n\nint max3(int a, int b, int c) {\n    return 0; // replace this\n}\n\nint main(void) {\n    int a, b, c;\n    scanf(\"%d %d %d\", &a, &b, &c);\n    printf(\"%d\\n\", max3(a, b, c));\n    return 0;\n}\n",
+          "tests": [
+            { "stdin": "1 5 3\n", "expected": "5\n", "visible": true },
+            { "stdin": "9 2 2\n", "expected": "9\n", "visible": true },
+            { "stdin": "-1 -5 -3\n", "expected": "-1\n", "visible": false },
+            { "stdin": "4 4 4\n", "expected": "4\n", "visible": false }
+          ],
+          "solution": "#include <stdio.h>\n\nint max3(int a, int b, int c) {\n    int best = a;\n    if (b > best) best = b;\n    if (c > best) best = c;\n    return best;\n}\n\nint main(void) {\n    int a, b, c;\n    scanf(\"%d %d %d\", &a, &b, &c);\n    printf(\"%d\\n\", max3(a, b, c));\n    return 0;\n}\n",
+          "explain": "Start with `best = a`, replace it whenever b or c is bigger, then return it."
+        }
+      ]
+    },
+    {
+      "id": "m5-l2",
+      "title": "What a function can and can't touch",
+      "concept": "Variables made inside a function are **local**: they exist only while it runs, and nobody else can see them.\n\nParameters are **copies**. If a function changes its `n`, the caller's variable doesn't change. (Mission 7 shows how to change it anyway.)\n\nA `static` variable inside a function is the exception: it's created once and **keeps its value between calls**. Handy for counting.",
+      "example": {
+        "source": "#include <stdio.h>\n\nvoid tryChange(int n) {\n    n = 99;\n}\n\nint counter(void) {\n    static int calls = 0;\n    calls++;\n    return calls;\n}\n\nint main(void) {\n    int fuel = 5;\n    tryChange(fuel);\n    printf(\"fuel: %d\\n\", fuel);\n    counter();\n    counter();\n    printf(\"calls: %d\\n\", counter());\n    return 0;\n}\n"
+      },
+      "predict": {
+        "id": "m5-p2",
+        "kind": "predict",
+        "prompt": "Before you run it: type what it prints.",
+        "code": "#include <stdio.h>\n\nvoid tryChange(int n) {\n    n = 99;\n}\n\nint counter(void) {\n    static int calls = 0;\n    calls++;\n    return calls;\n}\n\nint main(void) {\n    int fuel = 5;\n    tryChange(fuel);\n    printf(\"fuel: %d\\n\", fuel);\n    counter();\n    counter();\n    printf(\"calls: %d\\n\", counter());\n    return 0;\n}\n",
+        "answer": "fuel: 5\ncalls: 3\n",
+        "explain": "`tryChange` only changed its own copy. `calls` is static, so it counted all three calls.",
+        "warmupEligible": false
+      },
+      "drills": [
+        {
+          "id": "m5-d5",
+          "kind": "predict",
+          "prompt": "What does this print?",
+          "code": "void addOne(int x) {\n    x = x + 1;\n}\n\nint a = 1;\naddOne(a);\nprintf(\"%d\\n\", a);",
+          "options": ["1", "2", "0", "It won't compile"],
+          "answer": "1",
+          "explain": "`addOne` got a copy of `a`. The copy became 2; `a` didn't."
+        },
+        {
+          "id": "m5-d6",
+          "kind": "predict",
+          "prompt": "Type what this prints.",
+          "code": "int next(void) {\n    static int n = 10;\n    n += 5;\n    return n;\n}\n\nprintf(\"%d\\n\", next());\nprintf(\"%d\\n\", next());",
+          "answer": "15\n20\n",
+          "explain": "`n` starts at 10 once and keeps its value, so each call adds 5 more."
+        },
+        {
+          "id": "m5-d7",
+          "kind": "parsons",
+          "prompt": "Order and indent the lines into a program that prints `27`.",
+          "lines": [
+            { "text": "#include <stdio.h>", "indent": 0 },
+            { "text": "int cube(int n) {", "indent": 0 },
+            { "text": "return n * n * n;", "indent": 1 },
+            { "text": "}", "indent": 0 },
+            { "text": "int main(void) {", "indent": 0 },
+            { "text": "printf(\"%d\\n\", cube(3));", "indent": 1 },
+            { "text": "return 0;", "indent": 1 },
+            { "text": "}", "indent": 0 }
+          ],
+          "explain": "`cube` has to come before `main`, because `main` uses it."
+        }
+      ]
+    },
+    {
+      "id": "m5-l3",
+      "title": "Functions that call themselves",
+      "concept": "A function can call **itself**. That's **recursion**. It works when each call handles a smaller version of the problem, and there's a **base case** that stops without calling again.\n\n`countdown(3)` prints 3, then asks `countdown(2)` to do the rest, and so on until `countdown(0)`, the base case, says liftoff and stops.\n\nNo base case means it calls itself forever and crashes.",
+      "example": {
+        "source": "#include <stdio.h>\n\nvoid countdown(int n) {\n    if (n == 0) {\n        printf(\"Liftoff\\n\");\n        return;\n    }\n    printf(\"%d\\n\", n);\n    countdown(n - 1);\n}\n\nint main(void) {\n    countdown(3);\n    return 0;\n}\n"
+      },
+      "predict": {
+        "id": "m5-p3",
+        "kind": "predict",
+        "prompt": "Before you run it: type what it prints.",
+        "code": "#include <stdio.h>\n\nvoid countdown(int n) {\n    if (n == 0) {\n        printf(\"Liftoff\\n\");\n        return;\n    }\n    printf(\"%d\\n\", n);\n    countdown(n - 1);\n}\n\nint main(void) {\n    countdown(3);\n    return 0;\n}\n",
+        "answer": "3\n2\n1\nLiftoff\n",
+        "explain": "Each call prints its number and hands n − 1 to the next call. At 0 the base case prints Liftoff and stops.",
+        "warmupEligible": false
+      },
+      "drills": [
+        {
+          "id": "m5-d8",
+          "kind": "predict",
+          "prompt": "What does this print?",
+          "code": "int f(int n) {\n    if (n <= 1) return 1;\n    return n * f(n - 1);\n}\n\nprintf(\"%d\\n\", f(4));",
+          "options": ["24", "10", "4", "16"],
+          "answer": "24",
+          "explain": "4 × 3 × 2 × 1. That's the factorial."
+        },
+        {
+          "id": "m5-d9",
+          "kind": "fill",
+          "prompt": "Give the base case its answer: the sum of nothing.",
+          "code": "int sum(int n) {\n    if (n == 0) return ___;\n    return n + sum(n - 1);\n}",
+          "blanks": [["0"]],
+          "explain": "Adding up zero numbers gives 0, and that stops the recursion."
+        },
+        {
+          "id": "m5-d10",
+          "kind": "write",
+          "prompt": "Finish `power` recursively: base to the power exp (exp ≥ 0). Hint: anything to the power 0 is 1.",
+          "code": "#include <stdio.h>\n\nint power(int base, int exp) {\n    return 0; // replace this\n}\n\nint main(void) {\n    int base, exp;\n    scanf(\"%d %d\", &base, &exp);\n    printf(\"%d\\n\", power(base, exp));\n    return 0;\n}\n",
+          "tests": [
+            { "stdin": "2 10\n", "expected": "1024\n", "visible": true },
+            { "stdin": "5 0\n", "expected": "1\n", "visible": true },
+            { "stdin": "3 4\n", "expected": "81\n", "visible": false },
+            { "stdin": "-2 3\n", "expected": "-8\n", "visible": false },
+            { "stdin": "7 1\n", "expected": "7\n", "visible": false }
+          ],
+          "solution": "#include <stdio.h>\n\nint power(int base, int exp) {\n    if (exp == 0) return 1;\n    return base * power(base, exp - 1);\n}\n\nint main(void) {\n    int base, exp;\n    scanf(\"%d %d\", &base, &exp);\n    printf(\"%d\\n\", power(base, exp));\n    return 0;\n}\n",
+          "explain": "Base case: exp 0 gives 1. Otherwise base × power(base, exp − 1)."
+        }
+      ]
+    }
+  ],
+  "checkpoint": [
+    {
+      "id": "m5-cp1",
+      "kind": "predict",
+      "prompt": "What does `void beep(void)` tell you?",
+      "code": "void beep(void) { printf(\"beep\\n\"); }",
+      "options": ["It gives nothing back and takes nothing in", "It returns 0", "It can't be called", "It returns an empty value you can print"],
+      "answer": "It gives nothing back and takes nothing in",
+      "explain": "The first `void` is the return type, the one in brackets means no parameters."
+    },
+    {
+      "id": "m5-cp2",
+      "kind": "predict",
+      "prompt": "Type what this prints.",
+      "code": "int half(int x) {\n    return x / 2;\n}\n\nprintf(\"%d\\n\", half(half(20)));",
+      "answer": "5\n",
+      "explain": "half(20) is 10, half(10) is 5."
+    },
+    {
+      "id": "m5-cp3",
+      "kind": "fill",
+      "prompt": "Hand the answer back to the caller.",
+      "code": "int triple(int n) {\n    ___ n * 3;\n}",
+      "blanks": [["return"]],
+      "explain": "`return` sends a value back."
+    },
+    {
+      "id": "m5-cp4",
+      "kind": "predict",
+      "prompt": "What does this print?",
+      "code": "void reset(int v) {\n    v = 0;\n}\n\nint s = 7;\nreset(s);\nprintf(\"%d\\n\", s);",
+      "options": ["7", "0", "Garbage", "It won't compile"],
+      "answer": "7",
+      "explain": "Parameters are copies; `s` is untouched."
+    },
+    {
+      "id": "m5-cp5",
+      "kind": "predict",
+      "prompt": "Type what this prints.",
+      "code": "int g(int n) {\n    if (n == 0) return 0;\n    return 1 + g(n / 10);\n}\n\nprintf(\"%d\\n\", g(4096));",
+      "answer": "4\n",
+      "explain": "Each call chops off one digit and adds 1, so it counts the digits of 4096."
+    }
+  ]
+}

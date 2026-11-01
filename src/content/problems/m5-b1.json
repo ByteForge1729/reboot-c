@@ -1,0 +1,55 @@
+{
+  "id": "m5-b1",
+  "title": "Gear Ratio Drone",
+  "difficulty": "easy",
+  "story": "Repair drones mesh gears whose tooth counts share the biggest possible common divisor. Write `int gcd(int a, int b)` and use it.\n\nInput: two whole numbers `a` and `b` (1 ≤ a, b ≤ 1000000000).\n\nOutput: their greatest common divisor, the biggest number that divides both.\n\nExample: `12 18` prints `6`.",
+  "starter": "#include <stdio.h>\n\nint gcd(int a, int b) {\n    return 1; // replace this\n}\n\nint main(void) {\n    int a, b;\n    scanf(\"%d %d\", &a, &b);\n    printf(\"%d\\n\", gcd(a, b));\n    return 0;\n}\n",
+  "tests": [
+    {
+      "stdin": "12 18\n",
+      "expected": "6\n",
+      "visible": true
+    },
+    {
+      "stdin": "7 13\n",
+      "expected": "1\n",
+      "visible": true
+    },
+    {
+      "stdin": "100 25\n",
+      "expected": "25\n",
+      "visible": true
+    },
+    {
+      "stdin": "1 1\n",
+      "expected": "1\n",
+      "visible": false
+    },
+    {
+      "stdin": "1000000000 999999999\n",
+      "expected": "1\n",
+      "visible": false
+    },
+    {
+      "stdin": "48 180\n",
+      "expected": "12\n",
+      "visible": false
+    },
+    {
+      "stdin": "17 17\n",
+      "expected": "17\n",
+      "visible": false
+    },
+    {
+      "stdin": "270 192\n",
+      "expected": "6\n",
+      "visible": false
+    }
+  ],
+  "hints": [
+    "Trying every number up to a billion is too slow (the judge stops at 2 s).",
+    "Euclid's trick: gcd(a, b) is the same as gcd(b, a % b), and gcd(a, 0) is a.",
+    "Recursively: `if (b == 0) return a; return gcd(b, a % b);`"
+  ],
+  "solution": "#include <stdio.h>\n\nint gcd(int a, int b) {\n    if (b == 0) return a;\n    return gcd(b, a % b);\n}\n\nint main(void) {\n    int a, b;\n    scanf(\"%d %d\", &a, &b);\n    printf(\"%d\\n\", gcd(a, b));\n    return 0;\n}\n"
+}

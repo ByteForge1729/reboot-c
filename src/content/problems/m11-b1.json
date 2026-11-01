@@ -1,0 +1,50 @@
+{
+  "id": "m11-b1",
+  "title": "Alarm Tally",
+  "difficulty": "easy",
+  "story": "The alarm panel replays the day's alarms so you can count them. For each name in the input, **raise** that signal; handlers do the counting.\n\nInput: signal names separated by spaces: `INT`, `USR1`, `USR2` or `TERM` (any number, maybe none).\n\nOutput: four lines, `INT a`, `USR1 b`, `USR2 c`, `TERM d`: how many times each handler ran.\n\nExample: `USR1 INT USR1` prints `INT 1`, `USR1 2`, `USR2 0`, `TERM 0`.",
+  "starter": "#include <stdio.h>\n#include <signal.h>\n#include <string.h>\n\nint main(void) {\n    char name[16];\n    while (scanf(\"%15s\", name) == 1) {\n        // raise the matching signal\n    }\n    return 0;\n}\n",
+  "tests": [
+    {
+      "stdin": "USR1 INT USR1\n",
+      "expected": "INT 1\nUSR1 2\nUSR2 0\nTERM 0\n",
+      "visible": true
+    },
+    {
+      "stdin": "",
+      "expected": "INT 0\nUSR1 0\nUSR2 0\nTERM 0\n",
+      "visible": true
+    },
+    {
+      "stdin": "TERM\n",
+      "expected": "INT 0\nUSR1 0\nUSR2 0\nTERM 1\n",
+      "visible": true
+    },
+    {
+      "stdin": "INT INT INT INT\n",
+      "expected": "INT 4\nUSR1 0\nUSR2 0\nTERM 0\n",
+      "visible": false
+    },
+    {
+      "stdin": "USR2 TERM USR1 INT TERM USR2\n",
+      "expected": "INT 1\nUSR1 1\nUSR2 2\nTERM 2\n",
+      "visible": false
+    },
+    {
+      "stdin": "TERM TERM USR2\n",
+      "expected": "INT 0\nUSR1 0\nUSR2 1\nTERM 2\n",
+      "visible": false
+    },
+    {
+      "stdin": "USR1 USR1 USR1 USR1 USR1 USR2 INT TERM INT\n",
+      "expected": "INT 2\nUSR1 5\nUSR2 1\nTERM 1\n",
+      "visible": false
+    }
+  ],
+  "hints": [
+    "Install a handler for all four signals **before** the loop. Without one, the first TERM or USR1 kills the program, and any output still in printf's buffer is lost with it.",
+    "One handler can count all four: its `int sig` parameter says which signal arrived. Keep the counters as `volatile sig_atomic_t` globals.",
+    "Turn each name into a signal with strcmp: `if (strcmp(name, \"INT\") == 0) raise(SIGINT);` and so on. Print the counts after the loop."
+  ],
+  "solution": "#include <stdio.h>\n#include <signal.h>\n#include <string.h>\n\nvolatile sig_atomic_t ints = 0, usr1 = 0, usr2 = 0, terms = 0;\n\nvoid on_signal(int sig) {\n    if (sig == SIGINT) ints++;\n    else if (sig == SIGUSR1) usr1++;\n    else if (sig == SIGUSR2) usr2++;\n    else if (sig == SIGTERM) terms++;\n}\n\nint main(void) {\n    signal(SIGINT, on_signal);\n    signal(SIGUSR1, on_signal);\n    signal(SIGUSR2, on_signal);\n    signal(SIGTERM, on_signal);\n\n    char name[16];\n    while (scanf(\"%15s\", name) == 1) {\n        if (strcmp(name, \"INT\") == 0) raise(SIGINT);\n        else if (strcmp(name, \"USR1\") == 0) raise(SIGUSR1);\n        else if (strcmp(name, \"USR2\") == 0) raise(SIGUSR2);\n        else if (strcmp(name, \"TERM\") == 0) raise(SIGTERM);\n    }\n    printf(\"INT %d\\nUSR1 %d\\nUSR2 %d\\nTERM %d\\n\", (int)ints, (int)usr1, (int)usr2, (int)terms);\n    return 0;\n}\n"
+}

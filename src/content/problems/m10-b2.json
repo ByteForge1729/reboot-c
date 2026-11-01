@@ -1,0 +1,50 @@
+{
+  "id": "m10-b2",
+  "title": "Phrase Joiner",
+  "difficulty": "medium",
+  "story": "The translator builds phrases out of words, glued together with a separator.\n\nWrite `void join(char *out, const char *sep, ...)`. The words come after `sep` and end with `NULL`. It writes the words into `out` with `sep` between them (not before the first or after the last). No words means an **empty** string. `out` always has room for 256 characters.\n\n`main` is written for you. It reads a separator and three words (each up to 15 characters, the separator up to 3), then prints four joins inside brackets. The same `buf` is reused for every call.\n\nExample: input `- sos red now` prints `[sos-red-now]`, `[now]`, `[]`, `[red-sos-red-sos]`.",
+  "starter": "#include <stdio.h>\n#include <stdarg.h>\n#include <string.h>\n\nvoid join(char *out, const char *sep, ...) {\n}\n\nint main(void) {\n    char sep[4], w1[16], w2[16], w3[16], buf[256];\n    scanf(\"%3s %15s %15s %15s\", sep, w1, w2, w3);\n    join(buf, sep, w1, w2, w3, NULL);\n    printf(\"[%s]\\n\", buf);\n    join(buf, sep, w3, NULL);\n    printf(\"[%s]\\n\", buf);\n    join(buf, sep, NULL);\n    printf(\"[%s]\\n\", buf);\n    join(buf, sep, w2, w1, w2, w1, NULL);\n    printf(\"[%s]\\n\", buf);\n    return 0;\n}\n",
+  "tests": [
+    {
+      "stdin": "- sos red now\n",
+      "expected": "[sos-red-now]\n[now]\n[]\n[red-sos-red-sos]\n",
+      "visible": true
+    },
+    {
+      "stdin": ", a b c\n",
+      "expected": "[a,b,c]\n[c]\n[]\n[b,a,b,a]\n",
+      "visible": true
+    },
+    {
+      "stdin": "+ alpha beta gamma\n",
+      "expected": "[alpha+beta+gamma]\n[gamma]\n[]\n[beta+alpha+beta+alpha]\n",
+      "visible": true
+    },
+    {
+      "stdin": "-- x yy zzz\n",
+      "expected": "[x--yy--zzz]\n[zzz]\n[]\n[yy--x--yy--x]\n",
+      "visible": false
+    },
+    {
+      "stdin": "_ one two three\n",
+      "expected": "[one_two_three]\n[three]\n[]\n[two_one_two_one]\n",
+      "visible": false
+    },
+    {
+      "stdin": ". mayday mayday mayday\n",
+      "expected": "[mayday.mayday.mayday]\n[mayday]\n[]\n[mayday.mayday.mayday.mayday]\n",
+      "visible": false
+    },
+    {
+      "stdin": "| beacon is live\n",
+      "expected": "[beacon|is|live]\n[live]\n[]\n[is|beacon|is|beacon]\n",
+      "visible": false
+    }
+  ],
+  "hints": [
+    "Start by making `out` an empty string: `out[0] = '\\0';`. Otherwise the leftovers from the previous call (or random junk) stay in the buffer.",
+    "Walk the words with `for (const char *w = va_arg(args, const char *); w != NULL; w = va_arg(args, const char *))`, appending each with `strcat(out, w)`.",
+    "Add the separator **before** every word except the first: keep a flag, or check whether `out` is still empty, and `strcat(out, sep)` first."
+  ],
+  "solution": "#include <stdio.h>\n#include <stdarg.h>\n#include <string.h>\n\nvoid join(char *out, const char *sep, ...) {\n    va_list args;\n    va_start(args, sep);\n    out[0] = '\\0';\n    int first = 1;\n    for (const char *w = va_arg(args, const char *); w != NULL; w = va_arg(args, const char *)) {\n        if (!first) strcat(out, sep);\n        strcat(out, w);\n        first = 0;\n    }\n    va_end(args);\n}\n\nint main(void) {\n    char sep[4], w1[16], w2[16], w3[16], buf[256];\n    scanf(\"%3s %15s %15s %15s\", sep, w1, w2, w3);\n    join(buf, sep, w1, w2, w3, NULL);\n    printf(\"[%s]\\n\", buf);\n    join(buf, sep, w3, NULL);\n    printf(\"[%s]\\n\", buf);\n    join(buf, sep, NULL);\n    printf(\"[%s]\\n\", buf);\n    join(buf, sep, w2, w1, w2, w1, NULL);\n    printf(\"[%s]\\n\", buf);\n    return 0;\n}\n"
+}

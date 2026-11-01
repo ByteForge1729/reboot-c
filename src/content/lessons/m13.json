@@ -1,0 +1,389 @@
+{
+ "missionId": 13,
+ "cheatsheet": "**Starting and waiting** (`<pthread.h>`, compile with `-pthread`)\n`pthread_t t; pthread_create(&t, NULL, work, &job);` · `void *work(void *arg) { Job *job = arg; ... return NULL; }` · `pthread_join(t, NULL);`\n\n**Shared data**\nThreads share globals and memory. Read a thread's results only after joining it.\n\n**Races**\n`x++` from several threads loses updates. Guard it: `pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;` · `pthread_mutex_lock(&lock); x++; pthread_mutex_unlock(&lock);`\n\n**Splitting work**\n`base = n / D, extra = n % D`: the first `extra` drones get one more · some may get none\n\n**Fast and safe**\nAdd into a local variable, lock once at the end, or give each thread its own result slot.",
+ "lessons": [
+  {
+   "id": "m13-l1",
+   "title": "Threads: many drones, one program",
+   "concept": "A **thread** is a second line of work inside the same program. It runs at the same time as main and shares the same global variables and memory, unlike a forked child.\n\n`pthread_create(&t, NULL, work, &job)` starts `work(&job)` on a new thread. The function takes and returns a `void *`, so you pass it a pointer to whatever it needs.\n\n`pthread_join(t, NULL)` waits for that thread to finish. Only read its results after the join; before that, it may still be working.",
+   "example": {
+    "source": "#include <stdio.h>\n#include <pthread.h>\n\n#define DRONES 4\n\ntypedef struct {\n    int id;\n    long from, to, sum;\n} Job;\n\nvoid *work(void *arg) {\n    Job *job = arg;\n    job->sum = 0;\n    for (long i = job->from; i <= job->to; i++) job->sum += i;\n    return NULL;\n}\n\nint main(void) {\n    pthread_t threads[DRONES];\n    Job jobs[DRONES];\n    for (int i = 0; i < DRONES; i++) {\n        jobs[i] = (Job){ i, i * 250L + 1, (i + 1) * 250L, 0 };\n        pthread_create(&threads[i], NULL, work, &jobs[i]);\n    }\n\n    long total = 0;\n    for (int i = 0; i < DRONES; i++) {\n        pthread_join(threads[i], NULL);\n        printf(\"drone %d: %ld\\n\", jobs[i].id, jobs[i].sum);\n        total += jobs[i].sum;\n    }\n    printf(\"total %ld\\n\", total);\n    return 0;\n}\n",
+    "stdin": "",
+    "compileFlags": "-pthread"
+   },
+   "predict": {
+    "id": "m13-p1",
+    "kind": "predict",
+    "prompt": "Before you run it: type what it prints.",
+    "code": "#include <stdio.h>\n#include <pthread.h>\n\n#define DRONES 4\n\ntypedef struct {\n    int id;\n    long from, to, sum;\n} Job;\n\nvoid *work(void *arg) {\n    Job *job = arg;\n    job->sum = 0;\n    for (long i = job->from; i <= job->to; i++) job->sum += i;\n    return NULL;\n}\n\nint main(void) {\n    pthread_t threads[DRONES];\n    Job jobs[DRONES];\n    for (int i = 0; i < DRONES; i++) {\n        jobs[i] = (Job){ i, i * 250L + 1, (i + 1) * 250L, 0 };\n        pthread_create(&threads[i], NULL, work, &jobs[i]);\n    }\n\n    long total = 0;\n    for (int i = 0; i < DRONES; i++) {\n        pthread_join(threads[i], NULL);\n        printf(\"drone %d: %ld\\n\", jobs[i].id, jobs[i].sum);\n        total += jobs[i].sum;\n    }\n    printf(\"total %ld\\n\", total);\n    return 0;\n}\n",
+    "answer": "drone 0: 31375\ndrone 1: 93875\ndrone 2: 156375\ndrone 3: 218875\ntotal 500500\n",
+    "explain": "Each drone adds up its own 250 numbers of 1–1000. The printing happens after each join, so it's always in drone order.",
+    "warmupEligible": false
+   },
+   "drills": [
+    {
+     "id": "m13-d1",
+     "kind": "predict",
+     "prompt": "What does `pthread_join(t, NULL)` do?",
+     "code": "pthread_join(t, NULL);",
+     "options": [
+      "Waits until thread t has finished",
+      "Starts thread t",
+      "Stops thread t right now",
+      "Joins two threads into one"
+     ],
+     "answer": "Waits until thread t has finished",
+     "explain": "Join is how main knows the thread's results are ready."
+    },
+    {
+     "id": "m13-d2",
+     "kind": "fill",
+     "prompt": "Fill the blanks to run `work` on a thread and wait for it.",
+     "code": "pthread_t t;\nJob job = { 0, 1, 100, 0 };\npthread_create(&t, NULL, ___, &job);\npthread_join(___, NULL);\nprintf(\"%ld\\n\", job.sum);",
+     "blanks": [
+      [
+       "work"
+      ],
+      [
+       "t"
+      ]
+     ],
+     "explain": "Pass the function itself (no brackets) to pthread_create, and the thread's handle to pthread_join."
+    },
+    {
+     "id": "m13-d3",
+     "kind": "fix",
+     "prompt": "A drone should add up 1 to n on its own thread. The program crashes. Look closely at how the thread is started, then fix it.",
+     "code": "#include <stdio.h>\n#include <pthread.h>\n\ntypedef struct {\n    long n, sum;\n} Job;\n\nvoid *work(void *arg) {\n    Job *job = arg;\n    for (long i = 1; i <= job->n; i++) job->sum += i;\n    return NULL;\n}\n\nint main(void) {\n    Job job = { 0, 0 };\n    scanf(\"%ld\", &job.n);\n    pthread_t t;\n    pthread_create(&t, NULL, work(&job), NULL);\n    pthread_join(t, NULL);\n    printf(\"sum %ld\\n\", job.sum);\n    return 0;\n}\n",
+     "tests": [
+      {
+       "stdin": "10\n",
+       "expected": "sum 55\n",
+       "visible": true
+      },
+      {
+       "stdin": "1\n",
+       "expected": "sum 1\n",
+       "visible": true
+      },
+      {
+       "stdin": "1000\n",
+       "expected": "sum 500500\n",
+       "visible": false
+      },
+      {
+       "stdin": "100000\n",
+       "expected": "sum 5000050000\n",
+       "visible": false
+      }
+     ],
+     "solution": "#include <stdio.h>\n#include <pthread.h>\n\ntypedef struct {\n    long n, sum;\n} Job;\n\nvoid *work(void *arg) {\n    Job *job = arg;\n    for (long i = 1; i <= job->n; i++) job->sum += i;\n    return NULL;\n}\n\nint main(void) {\n    Job job = { 0, 0 };\n    scanf(\"%ld\", &job.n);\n    pthread_t t;\n    pthread_create(&t, NULL, work, &job);\n    pthread_join(t, NULL);\n    printf(\"sum %ld\\n\", job.sum);\n    return 0;\n}\n",
+     "explain": "`work(&job)` **calls** work right there in main, and its NULL result is handed over as the function to run, so the new thread jumps to address 0. Pass `work` and `&job` separately.",
+     "compileFlags": "-pthread"
+    },
+    {
+     "id": "m13-d4",
+     "kind": "write",
+     "prompt": "Two drones share the job: one adds up the **even** numbers, the other the **odd** ones. Write `add_matching` (it gets a `Job *`) and start both drones on it, then print `even E odd O`.",
+     "code": "#include <stdio.h>\n#include <pthread.h>\n\ntypedef struct {\n    const int *values;\n    int n;\n    int want_odd;\n    long sum;\n} Job;\n\n// write add_matching here\n\nint main(void) {\n    int n;\n    scanf(\"%d\", &n);\n    int values[100];\n    for (int i = 0; i < n; i++) scanf(\"%d\", &values[i]);\n    Job even = { values, n, 0, 0 }, odd = { values, n, 1, 0 };\n\n    // start a thread for each job, join both, then print\n    return 0;\n}\n",
+     "tests": [
+      {
+       "stdin": "5\n1 2 3 4 5\n",
+       "expected": "even 6 odd 9\n",
+       "visible": true
+      },
+      {
+       "stdin": "1\n7\n",
+       "expected": "even 0 odd 7\n",
+       "visible": true
+      },
+      {
+       "stdin": "4\n-2 -3 10 0\n",
+       "expected": "even 8 odd -3\n",
+       "visible": false
+      },
+      {
+       "stdin": "3\n2 4 6\n",
+       "expected": "even 12 odd 0\n",
+       "visible": false
+      }
+     ],
+     "solution": "#include <stdio.h>\n#include <pthread.h>\n\ntypedef struct {\n    const int *values;\n    int n;\n    int want_odd;\n    long sum;\n} Job;\n\nvoid *add_matching(void *arg) {\n    Job *job = arg;\n    for (int i = 0; i < job->n; i++) {\n        int is_odd = job->values[i] % 2 != 0;\n        if (is_odd == job->want_odd) job->sum += job->values[i];\n    }\n    return NULL;\n}\n\nint main(void) {\n    int n;\n    scanf(\"%d\", &n);\n    int values[100];\n    for (int i = 0; i < n; i++) scanf(\"%d\", &values[i]);\n    Job even = { values, n, 0, 0 }, odd = { values, n, 1, 0 };\n\n    pthread_t t1, t2;\n    pthread_create(&t1, NULL, add_matching, &even);\n    pthread_create(&t2, NULL, add_matching, &odd);\n    pthread_join(t1, NULL);\n    pthread_join(t2, NULL);\n    printf(\"even %ld odd %ld\\n\", even.sum, odd.sum);\n    return 0;\n}\n",
+     "explain": "Both threads read the same array, which is fine: nobody changes it. Each writes only to its own Job, so they never get in each other's way. Use `% 2 != 0` for odd, because -3 % 2 is -1, not 1.",
+     "compileFlags": "-pthread"
+    }
+   ]
+  },
+  {
+   "id": "m13-l2",
+   "title": "Race conditions and mutexes",
+   "concept": "`delivered++` looks like one step, but it's three: read the value, add 1, write it back. Two threads can both read 41, both write 42, and one delivery vanishes. On the judge, four threads doing 100000 unprotected `++` each ended up near **175000**, not 400000, and a different number every run. That's a **race condition**.\n\nA **mutex** is a lock only one thread can hold. `pthread_mutex_lock(&lock)` waits until it's free and takes it; `pthread_mutex_unlock(&lock)` gives it back. Code between the two runs one thread at a time.\n\nMake one with `pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;` and guard **every** access to the shared variable.",
+   "example": {
+    "source": "#include <stdio.h>\n#include <pthread.h>\n\n#define DRONES 4\n#define TRIPS 100000\n\nlong delivered = 0;\npthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;\n\nvoid *deliver(void *arg) {\n    (void)arg;\n    for (int i = 0; i < TRIPS; i++) {\n        pthread_mutex_lock(&lock);\n        delivered++;\n        pthread_mutex_unlock(&lock);\n    }\n    return NULL;\n}\n\nint main(void) {\n    pthread_t threads[DRONES];\n    for (int i = 0; i < DRONES; i++) pthread_create(&threads[i], NULL, deliver, NULL);\n    for (int i = 0; i < DRONES; i++) pthread_join(threads[i], NULL);\n    printf(\"delivered %ld\\n\", delivered);\n    return 0;\n}\n",
+    "stdin": "",
+    "compileFlags": "-pthread"
+   },
+   "predict": {
+    "id": "m13-p2",
+    "kind": "predict",
+    "prompt": "Before you run it: type what it prints.",
+    "code": "#include <stdio.h>\n#include <pthread.h>\n\n#define DRONES 4\n#define TRIPS 100000\n\nlong delivered = 0;\npthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;\n\nvoid *deliver(void *arg) {\n    (void)arg;\n    for (int i = 0; i < TRIPS; i++) {\n        pthread_mutex_lock(&lock);\n        delivered++;\n        pthread_mutex_unlock(&lock);\n    }\n    return NULL;\n}\n\nint main(void) {\n    pthread_t threads[DRONES];\n    for (int i = 0; i < DRONES; i++) pthread_create(&threads[i], NULL, deliver, NULL);\n    for (int i = 0; i < DRONES; i++) pthread_join(threads[i], NULL);\n    printf(\"delivered %ld\\n\", delivered);\n    return 0;\n}\n",
+    "answer": "delivered 400000\n",
+    "explain": "With the lock, none of the 4 × 100000 increments can collide, so none are lost.",
+    "warmupEligible": false
+   },
+   "drills": [
+    {
+     "id": "m13-d5",
+     "kind": "predict",
+     "prompt": "Why isn't `count++` safe when several threads do it at once?",
+     "code": "count++;",
+     "options": [
+      "It's really read, add, write: two threads can read the same old value and one update is lost",
+      "++ only works on the main thread",
+      "Threads can't see global variables",
+      "It makes the program run out of memory"
+     ],
+     "answer": "It's really read, add, write: two threads can read the same old value and one update is lost",
+     "explain": "The steps from different threads can interleave in any order."
+    },
+    {
+     "id": "m13-d6",
+     "kind": "fix",
+     "prompt": "Four drones each make `trips` deliveries, but the total keeps coming out short, and different every run. There's already a mutex declared. Use it.",
+     "code": "#include <stdio.h>\n#include <pthread.h>\n\n#define DRONES 4\n\nlong delivered = 0;\nlong trips = 0;\npthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;\n\nvoid *deliver(void *arg) {\n    (void)arg;\n    for (long i = 0; i < trips; i++) {\n        delivered++;\n    }\n    return NULL;\n}\n\nint main(void) {\n    scanf(\"%ld\", &trips);\n    pthread_t threads[DRONES];\n    for (int i = 0; i < DRONES; i++) pthread_create(&threads[i], NULL, deliver, NULL);\n    for (int i = 0; i < DRONES; i++) pthread_join(threads[i], NULL);\n    printf(\"delivered %ld\\n\", delivered);\n    return 0;\n}\n",
+     "tests": [
+      {
+       "stdin": "100000\n",
+       "expected": "delivered 400000\n",
+       "visible": true
+      },
+      {
+       "stdin": "200000\n",
+       "expected": "delivered 800000\n",
+       "visible": true
+      },
+      {
+       "stdin": "1\n",
+       "expected": "delivered 4\n",
+       "visible": false
+      },
+      {
+       "stdin": "50000\n",
+       "expected": "delivered 200000\n",
+       "visible": false
+      }
+     ],
+     "solution": "#include <stdio.h>\n#include <pthread.h>\n\n#define DRONES 4\n\nlong delivered = 0;\nlong trips = 0;\npthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;\n\nvoid *deliver(void *arg) {\n    (void)arg;\n    for (long i = 0; i < trips; i++) {\n        pthread_mutex_lock(&lock);\n        delivered++;\n        pthread_mutex_unlock(&lock);\n    }\n    return NULL;\n}\n\nint main(void) {\n    scanf(\"%ld\", &trips);\n    pthread_t threads[DRONES];\n    for (int i = 0; i < DRONES; i++) pthread_create(&threads[i], NULL, deliver, NULL);\n    for (int i = 0; i < DRONES; i++) pthread_join(threads[i], NULL);\n    printf(\"delivered %ld\\n\", delivered);\n    return 0;\n}\n",
+     "explain": "Lock before the increment and unlock right after, so only one drone touches `delivered` at a time.",
+     "compileFlags": "-pthread"
+    },
+    {
+     "id": "m13-d7",
+     "kind": "predict",
+     "prompt": "A thread locks the mutex and returns without unlocking it. What happens to the other threads?",
+     "code": "pthread_mutex_lock(&lock);\ndelivered++;\nreturn NULL;   // forgot to unlock",
+     "options": [
+      "They wait for the lock forever, so the program hangs (the judge reports a timeout)",
+      "They skip the locked part",
+      "The lock opens itself when the thread ends",
+      "The program crashes immediately"
+     ],
+     "answer": "They wait for the lock forever, so the program hangs (the judge reports a timeout)",
+     "explain": "Every lock needs its unlock on every path out, including early returns."
+    },
+    {
+     "id": "m13-d8",
+     "kind": "parsons",
+     "prompt": "Order and indent the lines into a delivery thread that never loses a count.",
+     "lines": [
+      {
+       "text": "void *deliver(void *arg) {",
+       "indent": 0
+      },
+      {
+       "text": "for (int i = 0; i < TRIPS; i++) {",
+       "indent": 1
+      },
+      {
+       "text": "pthread_mutex_lock(&lock);",
+       "indent": 2
+      },
+      {
+       "text": "delivered++;",
+       "indent": 2
+      },
+      {
+       "text": "pthread_mutex_unlock(&lock);",
+       "indent": 2
+      },
+      {
+       "text": "}",
+       "indent": 1
+      },
+      {
+       "text": "return NULL;",
+       "indent": 1
+      },
+      {
+       "text": "}",
+       "indent": 0
+      }
+     ],
+     "explain": "Lock, change the shared value, unlock: the smallest possible locked region."
+    }
+   ]
+  },
+  {
+   "id": "m13-l3",
+   "title": "Splitting the work fairly",
+   "concept": "To share n items among D drones, give each `n / D`, and hand the leftover `n % D` out one each to the first drones. For 10 items and 3 drones that's 4, 3, 3. Some drones may get **nothing** when n is small, and that has to work too.\n\nLocking for every single addition is slow: the drones spend their time queueing for the lock. Better: each drone adds into its own **local** variable, then locks **once** to add its result to the shared total.\n\nEven better, when you can: give each drone its own result slot, and let main combine them after joining. No lock needed at all.",
+   "example": {
+    "source": "#include <stdio.h>\n#include <pthread.h>\n\n#define DRONES 3\n\ntypedef struct {\n    long from, to;\n} Range;\n\nlong total = 0;\npthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;\n\nvoid *add_squares(void *arg) {\n    Range *r = arg;\n    long local = 0;\n    for (long i = r->from; i <= r->to; i++) local += i * i;\n    pthread_mutex_lock(&lock);\n    total += local;\n    pthread_mutex_unlock(&lock);\n    return NULL;\n}\n\nint main(void) {\n    long n;\n    scanf(\"%ld\", &n);\n    pthread_t threads[DRONES];\n    Range ranges[DRONES];\n    long base = n / DRONES, extra = n % DRONES, next = 1;\n    for (int i = 0; i < DRONES; i++) {\n        long size = base + (i < extra ? 1 : 0);\n        ranges[i] = (Range){ next, next + size - 1 };\n        next += size;\n        pthread_create(&threads[i], NULL, add_squares, &ranges[i]);\n    }\n    for (int i = 0; i < DRONES; i++) pthread_join(threads[i], NULL);\n\n    for (int i = 0; i < DRONES; i++) printf(\"drone %d: %ld-%ld\\n\", i, ranges[i].from, ranges[i].to);\n    printf(\"sum of squares 1..%ld = %ld\\n\", n, total);\n    return 0;\n}\n",
+    "stdin": "10\n",
+    "compileFlags": "-pthread"
+   },
+   "predict": {
+    "id": "m13-p3",
+    "kind": "predict",
+    "prompt": "It's fed `10`. Before you run it: type what it prints.",
+    "code": "#include <stdio.h>\n#include <pthread.h>\n\n#define DRONES 3\n\ntypedef struct {\n    long from, to;\n} Range;\n\nlong total = 0;\npthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;\n\nvoid *add_squares(void *arg) {\n    Range *r = arg;\n    long local = 0;\n    for (long i = r->from; i <= r->to; i++) local += i * i;\n    pthread_mutex_lock(&lock);\n    total += local;\n    pthread_mutex_unlock(&lock);\n    return NULL;\n}\n\nint main(void) {\n    long n;\n    scanf(\"%ld\", &n);\n    pthread_t threads[DRONES];\n    Range ranges[DRONES];\n    long base = n / DRONES, extra = n % DRONES, next = 1;\n    for (int i = 0; i < DRONES; i++) {\n        long size = base + (i < extra ? 1 : 0);\n        ranges[i] = (Range){ next, next + size - 1 };\n        next += size;\n        pthread_create(&threads[i], NULL, add_squares, &ranges[i]);\n    }\n    for (int i = 0; i < DRONES; i++) pthread_join(threads[i], NULL);\n\n    for (int i = 0; i < DRONES; i++) printf(\"drone %d: %ld-%ld\\n\", i, ranges[i].from, ranges[i].to);\n    printf(\"sum of squares 1..%ld = %ld\\n\", n, total);\n    return 0;\n}\n",
+    "answer": "drone 0: 1-4\ndrone 1: 5-7\ndrone 2: 8-10\nsum of squares 1..10 = 385\n",
+    "explain": "10 / 3 is 3 with 1 left over, so drone 0 gets an extra number. 1 + 4 + 9 + … + 100 = 385.",
+    "warmupEligible": false
+   },
+   "drills": [
+    {
+     "id": "m13-d9",
+     "kind": "predict",
+     "prompt": "With the example's rule, how are 1–11 split across 3 drones?",
+     "code": "long base = n / DRONES, extra = n % DRONES;",
+     "options": [
+      "1-4, 5-8, 9-11",
+      "1-3, 4-7, 8-11",
+      "1-4, 5-7, 8-11",
+      "1-3, 4-6, 7-11"
+     ],
+     "answer": "1-4, 5-8, 9-11",
+     "explain": "11 / 3 is 3 with 2 left over, so the first two drones get 4 and the last gets 3."
+    },
+    {
+     "id": "m13-d10",
+     "kind": "predict",
+     "prompt": "Which is faster with 4 drones and 10 million additions?",
+     "code": "total += value;",
+     "options": [
+      "Each drone adds into a local variable, then locks once to add it to the total",
+      "Lock around every single addition",
+      "No lock at all, it's just addition",
+      "One drone does everything"
+     ],
+     "answer": "Each drone adds into a local variable, then locks once to add it to the total",
+     "explain": "Locking once per drone instead of once per number removes almost all the waiting, and the answer is still exact."
+    },
+    {
+     "id": "m13-d11",
+     "kind": "write",
+     "prompt": "Four drones find the biggest value: split the n numbers (n ≥ 1, maybe fewer than 4!) into slices, let each drone find the max of its slice, then combine in main and print `max M`. The `Slice` struct is ready.",
+     "code": "#include <stdio.h>\n#include <stdlib.h>\n#include <pthread.h>\n\n#define DRONES 4\n\ntypedef struct {\n    const int *values;\n    int from, to;   // this drone's slice: values[from] .. values[to - 1]\n    int max;\n} Slice;\n\n// write the thread function here\n\nint main(void) {\n    int n;\n    scanf(\"%d\", &n);\n    int *values = malloc(n * sizeof(int));\n    if (values == NULL) return 1;\n    for (int i = 0; i < n; i++) scanf(\"%d\", &values[i]);\n    pthread_t threads[DRONES];\n    Slice slices[DRONES];\n\n    // split, start, join, combine\n    free(values);\n    return 0;\n}\n",
+     "tests": [
+      {
+       "stdin": "6\n3 9 2 7 5 1\n",
+       "expected": "max 9\n",
+       "visible": true
+      },
+      {
+       "stdin": "1\n-4\n",
+       "expected": "max -4\n",
+       "visible": true
+      },
+      {
+       "stdin": "7\n-5 -2 -9 -1 -3 -8 -6\n",
+       "expected": "max -1\n",
+       "visible": false
+      },
+      {
+       "stdin": "10\n1 2 3 4 5 6 7 8 9 10\n",
+       "expected": "max 10\n",
+       "visible": false
+      },
+      {
+       "stdin": "3\n0 0 0\n",
+       "expected": "max 0\n",
+       "visible": false
+      }
+     ],
+     "solution": "#include <stdio.h>\n#include <stdlib.h>\n#include <pthread.h>\n\n#define DRONES 4\n\ntypedef struct {\n    const int *values;\n    int from, to;   // this drone's slice: values[from] .. values[to - 1]\n    int max;\n} Slice;\n\nvoid *find_max(void *arg) {\n    Slice *s = arg;\n    for (int i = s->from; i < s->to; i++) {\n        if (i == s->from || s->values[i] > s->max) s->max = s->values[i];\n    }\n    return NULL;\n}\n\nint main(void) {\n    int n;\n    scanf(\"%d\", &n);\n    int *values = malloc(n * sizeof(int));\n    if (values == NULL) return 1;\n    for (int i = 0; i < n; i++) scanf(\"%d\", &values[i]);\n    pthread_t threads[DRONES];\n    Slice slices[DRONES];\n\n    int base = n / DRONES, extra = n % DRONES, next = 0;\n    for (int i = 0; i < DRONES; i++) {\n        int size = base + (i < extra ? 1 : 0);\n        slices[i] = (Slice){ values, next, next + size, 0 };\n        next += size;\n        pthread_create(&threads[i], NULL, find_max, &slices[i]);\n    }\n    int found = 0, best = 0;\n    for (int i = 0; i < DRONES; i++) {\n        pthread_join(threads[i], NULL);\n        if (slices[i].from == slices[i].to) continue;   // this drone had nothing to do\n        if (!found || slices[i].max > best) best = slices[i].max;\n        found = 1;\n    }\n    printf(\"max %d\\n\", best);\n    free(values);\n    return 0;\n}\n",
+     "explain": "Each drone writes only its own Slice, so no lock is needed. The traps: an empty slice has no max at all (skip it when combining), and starting from 0 breaks all-negative input.",
+     "compileFlags": "-pthread"
+    }
+   ]
+  }
+ ],
+ "checkpoint": [
+  {
+   "id": "m13-cp1",
+   "kind": "predict",
+   "prompt": "After `pthread_create(&t, NULL, work, &job);`, when does `work` run?",
+   "code": "pthread_create(&t, NULL, work, &job);",
+   "options": [
+    "Straight away, at the same time as main",
+    "Only when main calls pthread_join",
+    "After main finishes",
+    "Only if main is waiting"
+   ],
+   "answer": "Straight away, at the same time as main",
+   "explain": "The thread starts immediately; join just waits for it to end."
+  },
+  {
+   "id": "m13-cp2",
+   "kind": "predict",
+   "prompt": "What does a program using threads need?",
+   "code": "pthread_create(...);",
+   "options": [
+    "`#include <pthread.h>`, and the `-pthread` flag when compiling (the judge adds it here)",
+    "Only `#include <threads.h>`",
+    "Nothing extra",
+    "A second main function"
+   ],
+   "answer": "`#include <pthread.h>`, and the `-pthread` flag when compiling (the judge adds it here)",
+   "explain": "Without -pthread the program fails to link: *undefined reference to pthread_create*."
+  },
+  {
+   "id": "m13-cp3",
+   "kind": "predict",
+   "prompt": "Type what this prints.",
+   "code": "#include <stdio.h>\n#include <pthread.h>\n\nvoid *triple(void *arg) {\n    int *v = arg;\n    *v *= 3;\n    return NULL;\n}\n\nint main(void) {\n    int a = 2, b = 5;\n    pthread_t t1, t2;\n    pthread_create(&t1, NULL, triple, &a);\n    pthread_create(&t2, NULL, triple, &b);\n    pthread_join(t1, NULL);\n    pthread_join(t2, NULL);\n    printf(\"%d\\n\", a + b);\n    return 0;\n}\n",
+   "answer": "21\n",
+   "explain": "Each thread triples a different variable (6 and 15), and main reads them after both joins."
+  },
+  {
+   "id": "m13-cp4",
+   "kind": "predict",
+   "prompt": "Two threads each do `count++` a million times with no lock. What's the final count?",
+   "code": "count++;",
+   "options": [
+    "Usually less than 2000000, and different every run",
+    "Exactly 2000000",
+    "Exactly 1000000",
+    "0"
+   ],
+   "answer": "Usually less than 2000000, and different every run",
+   "explain": "Lost updates from the race. A mutex (or separate counters) fixes it."
+  },
+  {
+   "id": "m13-cp5",
+   "kind": "predict",
+   "prompt": "What does `pthread_mutex_lock(&lock)` do if another thread already holds the lock?",
+   "code": "pthread_mutex_lock(&lock);",
+   "options": [
+    "Waits until it's unlocked, then takes it",
+    "Takes it anyway",
+    "Returns an error straight away",
+    "Unlocks it for the other thread"
+   ],
+   "answer": "Waits until it's unlocked, then takes it",
+   "explain": "That waiting is what keeps the protected code one-at-a-time."
+  }
+ ]
+}

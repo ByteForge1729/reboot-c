@@ -1,0 +1,23 @@
+{
+  "id": "m1-b3",
+  "title": "Ration Planner",
+  "difficulty": "hard",
+  "story": "Before life support can schedule the food printers, SIGMA needs to know how much food the trip takes.\n\nInput: three numbers on one line: `C` crew (whole number, 1–100), `D` days (whole number, 1–365) and `R` grams per person per day (decimal, 0–5000).\n\nOutput: `Rations: X kg`, where `X` is the total food in kilograms (`C × D × R ÷ 1000`), printed with 1 decimal.\n\nExample: `6 30 450.5` prints `Rations: 81.1 kg`.",
+  "starter": "#include <stdio.h>\n\nint main(void) {\n    int crew, days;\n    double grams;\n    // read all three, then print the total in kg\n    return 0;\n}\n",
+  "tests": [
+    { "stdin": "6 30 450.5\n", "expected": "Rations: 81.1 kg\n", "visible": true },
+    { "stdin": "1 1 999\n", "expected": "Rations: 1.0 kg\n", "visible": true },
+    { "stdin": "3 7 0\n", "expected": "Rations: 0.0 kg\n", "visible": true },
+    { "stdin": "12 100 1250.25\n", "expected": "Rations: 1500.3 kg\n", "visible": false },
+    { "stdin": "100 365 820\n", "expected": "Rations: 29930.0 kg\n", "visible": false },
+    { "stdin": "2 2 0.25\n", "expected": "Rations: 0.0 kg\n", "visible": false },
+    { "stdin": "7 9 125.5\n", "expected": "Rations: 7.9 kg\n", "visible": false },
+    { "stdin": "100 365 5000\n", "expected": "Rations: 182500.0 kg\n", "visible": false }
+  ],
+  "hints": [
+    "One scanf can read all three: `scanf(\"%d %d %lf\", &crew, &days, &grams);`.",
+    "Multiply the three together, then divide by 1000 to turn grams into kilograms. Keep the result in a double.",
+    "Print with `%.1f` and spell the text exactly: `Rations: ` then the number then ` kg`."
+  ],
+  "solution": "#include <stdio.h>\n\nint main(void) {\n    int crew, days;\n    double grams;\n    scanf(\"%d %d %lf\", &crew, &days, &grams);\n    double kilograms = crew * days * grams / 1000;\n    printf(\"Rations: %.1f kg\\n\", kilograms);\n    return 0;\n}\n"
+}

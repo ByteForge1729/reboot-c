@@ -1,0 +1,55 @@
+{
+  "id": "m7-b2",
+  "title": "Crew Roster",
+  "difficulty": "medium",
+  "story": "The roster has to list the crew by age, youngest first. Crew with the **same age keep the order they were given in**.\n\nInput: `N` (1–50), then N lines, each `name age` (name: 1–19 letters, age: 0–150).\n\nOutput: N lines, `name age`, sorted by age.\n\nExample input `3`, `Mira 31`, `Jon 25`, `Ada 40` prints `Jon 25`, `Mira 31`, `Ada 40`.",
+  "starter": "#include <stdio.h>\n\ntypedef struct {\n    char name[20];\n    int age;\n} Crew;\n\nint main(void) {\n    int n;\n    Crew crew[50];\n    scanf(\"%d\", &n);\n    for (int i = 0; i < n; i++) {\n        scanf(\"%19s %d\", crew[i].name, &crew[i].age);\n    }\n    // sort by age, then print\n    return 0;\n}\n",
+  "tests": [
+    {
+      "stdin": "3\nMira 31\nJon 25\nAda 40\n",
+      "expected": "Jon 25\nMira 31\nAda 40\n",
+      "visible": true
+    },
+    {
+      "stdin": "1\nSolo 99\n",
+      "expected": "Solo 99\n",
+      "visible": true
+    },
+    {
+      "stdin": "4\nA 30\nB 20\nC 30\nD 20\n",
+      "expected": "B 20\nD 20\nA 30\nC 30\n",
+      "visible": true
+    },
+    {
+      "stdin": "5\nE 5\nD 4\nC 3\nB 2\nA 1\n",
+      "expected": "A 1\nB 2\nC 3\nD 4\nE 5\n",
+      "visible": false
+    },
+    {
+      "stdin": "2\nX 10\nY 10\n",
+      "expected": "X 10\nY 10\n",
+      "visible": false
+    },
+    {
+      "stdin": "3\nZed 70\nAmy 70\nBo 1\n",
+      "expected": "Bo 1\nZed 70\nAmy 70\n",
+      "visible": false
+    },
+    {
+      "stdin": "6\nKai 0\nLu 150\nMax 0\nNed 75\nOz 150\nPia 75\n",
+      "expected": "Kai 0\nMax 0\nNed 75\nPia 75\nLu 150\nOz 150\n",
+      "visible": false
+    },
+    {
+      "stdin": "4\nRae 33\nSol 32\nTam 31\nUma 30\n",
+      "expected": "Uma 30\nTam 31\nSol 32\nRae 33\n",
+      "visible": false
+    }
+  ],
+  "hints": [
+    "Sort the array of structs. You can swap whole structs with `=`: `Crew t = crew[i]; crew[i] = crew[j]; crew[j] = t;`.",
+    "Insertion sort keeps equal ages in their original order: take each record and slide it left past records with a **strictly greater** age.",
+    "Bubble sort works too, as long as you only swap when `crew[j].age > crew[j + 1].age` (never on equal ages)."
+  ],
+  "solution": "#include <stdio.h>\n\ntypedef struct {\n    char name[20];\n    int age;\n} Crew;\n\nint main(void) {\n    int n;\n    Crew crew[50];\n    scanf(\"%d\", &n);\n    for (int i = 0; i < n; i++) {\n        scanf(\"%19s %d\", crew[i].name, &crew[i].age);\n    }\n    for (int i = 1; i < n; i++) {\n        Crew current = crew[i];\n        int j = i - 1;\n        while (j >= 0 && crew[j].age > current.age) {\n            crew[j + 1] = crew[j];\n            j--;\n        }\n        crew[j + 1] = current;\n    }\n    for (int i = 0; i < n; i++) {\n        printf(\"%s %d\\n\", crew[i].name, crew[i].age);\n    }\n    return 0;\n}\n"
+}

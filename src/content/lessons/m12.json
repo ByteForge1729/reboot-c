@@ -1,0 +1,377 @@
+{
+ "missionId": 12,
+ "cheatsheet": "**A connected pair** (`<sys/socket.h>`)\n`int fds[2]; socketpair(AF_UNIX, SOCK_STREAM, 0, fds);`\n\n**Bytes in, bytes out**\n`send(fd, data, n, 0)` · `ssize_t got = recv(fd, buf, room, 0)`: 0 = other side hung up, -1 = error · add the `'\\0'` yourself\n\n**Two processes** (`<unistd.h>`, `<sys/wait.h>`)\n`pid_t pid = fork();` 0 in the child · each side `close`s the end it doesn't use · child ends with `_exit(0)` · parent `waitpid(pid, NULL, 0)`\n\n**Protocols**\nSend an int's bytes: `send(fd, &v, sizeof v, 0)` · read whole ones with `MSG_WAITALL` · `shutdown(fd, SHUT_WR)` = done sending\n\n**On a real network**\n`socket`, then `bind`/`listen`/`accept` on the server and `connect` on the client; send/recv work the same.",
+ "lessons": [
+  {
+   "id": "m12-l1",
+   "title": "A socket is a phone line",
+   "concept": "A **socket** is one end of a connection between two programs. What you `send` into one end comes out of the other with `recv`. Over the internet the ends are on different machines; here they're in the same program.\n\n`socketpair(AF_UNIX, SOCK_STREAM, 0, fds)` makes two connected ends, `fds[0]` and `fds[1]`. Each is just a number, like a FILE but lower level.\n\n`send(fd, data, how_many_bytes, 0)` and `recv(fd, buffer, room, 0)` move raw **bytes**: recv returns how many arrived, and it doesn't add a `'\\0'` for you.",
+   "example": {
+    "source": "#include <stdio.h>\n#include <string.h>\n#include <sys/socket.h>\n#include <unistd.h>\n\nint main(void) {\n    int fds[2];\n    if (socketpair(AF_UNIX, SOCK_STREAM, 0, fds) == -1) {\n        perror(\"socketpair\");\n        return 1;\n    }\n\n    const char *msg = \"MAYDAY\";\n    send(fds[0], msg, strlen(msg), 0);\n\n    char buf[32];\n    ssize_t got = recv(fds[1], buf, sizeof buf - 1, 0);\n    buf[got] = '\\0';\n    printf(\"received %zd bytes: %s\\n\", got, buf);\n\n    close(fds[0]);\n    close(fds[1]);\n    return 0;\n}\n",
+    "stdin": ""
+   },
+   "predict": {
+    "id": "m12-p1",
+    "kind": "predict",
+    "prompt": "Before you run it: type what it prints.",
+    "code": "#include <stdio.h>\n#include <string.h>\n#include <sys/socket.h>\n#include <unistd.h>\n\nint main(void) {\n    int fds[2];\n    if (socketpair(AF_UNIX, SOCK_STREAM, 0, fds) == -1) {\n        perror(\"socketpair\");\n        return 1;\n    }\n\n    const char *msg = \"MAYDAY\";\n    send(fds[0], msg, strlen(msg), 0);\n\n    char buf[32];\n    ssize_t got = recv(fds[1], buf, sizeof buf - 1, 0);\n    buf[got] = '\\0';\n    printf(\"received %zd bytes: %s\\n\", got, buf);\n\n    close(fds[0]);\n    close(fds[1]);\n    return 0;\n}\n",
+    "answer": "received 6 bytes: MAYDAY\n",
+    "explain": "Six bytes go in at fds[0] and come out at fds[1]. The program adds the '\\0' itself before printing.",
+    "warmupEligible": false
+   },
+   "drills": [
+    {
+     "id": "m12-d1",
+     "kind": "predict",
+     "prompt": "What does recv return?",
+     "code": "ssize_t got = recv(fd, buf, sizeof buf, 0);",
+     "options": [
+      "How many bytes arrived (0 means the other side hung up, -1 an error)",
+      "The message as a string",
+      "Always the size of buf",
+      "1 for success, 0 for failure"
+     ],
+     "answer": "How many bytes arrived (0 means the other side hung up, -1 an error)",
+     "explain": "That count is how you know where the message ends, and where to put the '\\0'."
+    },
+    {
+     "id": "m12-d2",
+     "kind": "fix",
+     "prompt": "Send the word through the socket and report how many bytes arrived. The count comes out wrong for most words. Fix it.",
+     "code": "#include <stdio.h>\n#include <string.h>\n#include <sys/socket.h>\n#include <unistd.h>\n\nint main(void) {\n    int fds[2];\n    if (socketpair(AF_UNIX, SOCK_STREAM, 0, fds) == -1) {\n        perror(\"socketpair\");\n        return 1;\n    }\n\n    char word[32];\n    scanf(\"%31s\", word);\n    const char *msg = word;\n    send(fds[0], msg, sizeof msg, 0);\n\n    char buf[64];\n    ssize_t got = recv(fds[1], buf, sizeof buf - 1, 0);\n    buf[got] = '\\0';\n    printf(\"%zd bytes: %s\\n\", got, buf);\n\n    close(fds[0]);\n    close(fds[1]);\n    return 0;\n}\n",
+     "tests": [
+      {
+       "stdin": "SOS\n",
+       "expected": "3 bytes: SOS\n",
+       "visible": true
+      },
+      {
+       "stdin": "beacon\n",
+       "expected": "6 bytes: beacon\n",
+       "visible": true
+      },
+      {
+       "stdin": "hi\n",
+       "expected": "2 bytes: hi\n",
+       "visible": false
+      },
+      {
+       "stdin": "emergency\n",
+       "expected": "9 bytes: emergency\n",
+       "visible": false
+      }
+     ],
+     "solution": "#include <stdio.h>\n#include <string.h>\n#include <sys/socket.h>\n#include <unistd.h>\n\nint main(void) {\n    int fds[2];\n    if (socketpair(AF_UNIX, SOCK_STREAM, 0, fds) == -1) {\n        perror(\"socketpair\");\n        return 1;\n    }\n\n    char word[32];\n    scanf(\"%31s\", word);\n    const char *msg = word;\n    send(fds[0], msg, strlen(msg), 0);\n\n    char buf[64];\n    ssize_t got = recv(fds[1], buf, sizeof buf - 1, 0);\n    buf[got] = '\\0';\n    printf(\"%zd bytes: %s\\n\", got, buf);\n\n    close(fds[0]);\n    close(fds[1]);\n    return 0;\n}\n",
+     "explain": "`msg` is a pointer, so `sizeof msg` is the size of an address (8 bytes), not the length of the text. `strlen(msg)` counts the characters."
+    },
+    {
+     "id": "m12-d3",
+     "kind": "predict",
+     "prompt": "Type what this prints.",
+     "code": "#include <stdio.h>\n#include <sys/socket.h>\n#include <unistd.h>\n\nint main(void) {\n    int fds[2];\n    if (socketpair(AF_UNIX, SOCK_STREAM, 0, fds) == -1) {\n        perror(\"socketpair\");\n        return 1;\n    }\n\n    send(fds[0], \"ping\", 4, 0);\n    send(fds[1], \"pong\", 4, 0);\n\n    char a[8] = { 0 }, b[8] = { 0 };\n    recv(fds[1], a, 4, 0);\n    recv(fds[0], b, 4, 0);\n    printf(\"%s %s\\n\", a, b);\n\n    close(fds[0]);\n    close(fds[1]);\n    return 0;\n}\n",
+     "answer": "ping pong\n",
+     "explain": "The line works both ways: ping goes 0 → 1, pong goes 1 → 0. (The arrays start zeroed, so the strings are already terminated.)"
+    },
+    {
+     "id": "m12-d4",
+     "kind": "predict",
+     "prompt": "One end sends `\"AB\"`, then `\"CD\"`. The other end does one `recv` with room for 10 bytes. What can it get?",
+     "code": "send(fd, \"AB\", 2, 0);\nsend(fd, \"CD\", 2, 0);",
+     "options": [
+      "Possibly ABCD all at once: a stream has no message boundaries",
+      "Always just AB",
+      "Always CD",
+      "An error: it must ask for exactly 2"
+     ],
+     "answer": "Possibly ABCD all at once: a stream has no message boundaries",
+     "explain": "SOCK_STREAM is a stream of bytes, not separate messages. If you need boundaries, build them in (lesson 3)."
+    },
+    {
+     "id": "m12-d5",
+     "kind": "write",
+     "prompt": "Read a word. Send it from `fds[0]`, receive it at `fds[1]`, turn it UPPERCASE, send it back from `fds[1]`, receive it at `fds[0]`, and print `reply: WORD`.",
+     "code": "#include <stdio.h>\n#include <ctype.h>\n#include <string.h>\n#include <sys/socket.h>\n#include <unistd.h>\n\nint main(void) {\n    int fds[2];\n    if (socketpair(AF_UNIX, SOCK_STREAM, 0, fds) == -1) {\n        perror(\"socketpair\");\n        return 1;\n    }\n\n    char word[32];\n    scanf(\"%31s\", word);\n    // there and back again\n    close(fds[0]);\n    close(fds[1]);\n    return 0;\n}\n",
+     "tests": [
+      {
+       "stdin": "help\n",
+       "expected": "reply: HELP\n",
+       "visible": true
+      },
+      {
+       "stdin": "Sos42\n",
+       "expected": "reply: SOS42\n",
+       "visible": true
+      },
+      {
+       "stdin": "x\n",
+       "expected": "reply: X\n",
+       "visible": false
+      },
+      {
+       "stdin": "ALREADY\n",
+       "expected": "reply: ALREADY\n",
+       "visible": false
+      }
+     ],
+     "solution": "#include <stdio.h>\n#include <ctype.h>\n#include <string.h>\n#include <sys/socket.h>\n#include <unistd.h>\n\nint main(void) {\n    int fds[2];\n    if (socketpair(AF_UNIX, SOCK_STREAM, 0, fds) == -1) {\n        perror(\"socketpair\");\n        return 1;\n    }\n\n    char word[32];\n    scanf(\"%31s\", word);\n    send(fds[0], word, strlen(word), 0);\n\n    char buf[32];\n    ssize_t n = recv(fds[1], buf, sizeof buf, 0);\n    for (ssize_t i = 0; i < n; i++) buf[i] = toupper((unsigned char)buf[i]);\n    send(fds[1], buf, n, 0);\n\n    char reply[32];\n    ssize_t got = recv(fds[0], reply, sizeof reply - 1, 0);\n    reply[got] = '\\0';\n    printf(\"reply: %s\\n\", reply);\n\n    close(fds[0]);\n    close(fds[1]);\n    return 0;\n}\n",
+     "explain": "Use recv's count everywhere: for the uppercase loop, for how much to send back, and for where the '\\0' goes."
+    }
+   ]
+  },
+  {
+   "id": "m12-l2",
+   "title": "Two programs: fork",
+   "concept": "`fork()` copies the running program. Both copies carry on from the same line; fork returns **0 in the child** and the child's id in the parent. That's how each knows its role.\n\nMake the socketpair **before** forking and both get both ends. Each side keeps one: the child closes `fds[0]` and talks on `fds[1]`, the parent the other way round. Now it's a real conversation between two programs.\n\nThe parent waits for the child with `waitpid(pid, NULL, 0)`. The child ends with `_exit(0)`, which leaves without flushing the copy of printf's buffer it inherited.",
+   "example": {
+    "source": "#include <stdio.h>\n#include <ctype.h>\n#include <string.h>\n#include <sys/socket.h>\n#include <sys/wait.h>\n#include <unistd.h>\n\nint main(void) {\n    int fds[2];\n    if (socketpair(AF_UNIX, SOCK_STREAM, 0, fds) == -1) {\n        perror(\"socketpair\");\n        return 1;\n    }\n\n    pid_t pid = fork();\n    if (pid == -1) {\n        perror(\"fork\");\n        return 1;\n    }\n    if (pid == 0) {                 // child: the beacon\n        close(fds[0]);\n        char buf[64];\n        ssize_t n = recv(fds[1], buf, sizeof buf, 0);\n        for (ssize_t i = 0; i < n; i++) buf[i] = toupper((unsigned char)buf[i]);\n        send(fds[1], buf, n, 0);\n        close(fds[1]);\n        _exit(0);\n    }\n\n    close(fds[1]);                  // parent: the station\n    const char *msg = \"help us\";\n    send(fds[0], msg, strlen(msg), 0);\n    char reply[64];\n    ssize_t n = recv(fds[0], reply, sizeof reply - 1, 0);\n    reply[n] = '\\0';\n    waitpid(pid, NULL, 0);\n    printf(\"beacon replied: %s\\n\", reply);\n    close(fds[0]);\n    return 0;\n}\n",
+    "stdin": ""
+   },
+   "predict": {
+    "id": "m12-p2",
+    "kind": "predict",
+    "prompt": "Before you run it: type what it prints.",
+    "code": "#include <stdio.h>\n#include <ctype.h>\n#include <string.h>\n#include <sys/socket.h>\n#include <sys/wait.h>\n#include <unistd.h>\n\nint main(void) {\n    int fds[2];\n    if (socketpair(AF_UNIX, SOCK_STREAM, 0, fds) == -1) {\n        perror(\"socketpair\");\n        return 1;\n    }\n\n    pid_t pid = fork();\n    if (pid == -1) {\n        perror(\"fork\");\n        return 1;\n    }\n    if (pid == 0) {                 // child: the beacon\n        close(fds[0]);\n        char buf[64];\n        ssize_t n = recv(fds[1], buf, sizeof buf, 0);\n        for (ssize_t i = 0; i < n; i++) buf[i] = toupper((unsigned char)buf[i]);\n        send(fds[1], buf, n, 0);\n        close(fds[1]);\n        _exit(0);\n    }\n\n    close(fds[1]);                  // parent: the station\n    const char *msg = \"help us\";\n    send(fds[0], msg, strlen(msg), 0);\n    char reply[64];\n    ssize_t n = recv(fds[0], reply, sizeof reply - 1, 0);\n    reply[n] = '\\0';\n    waitpid(pid, NULL, 0);\n    printf(\"beacon replied: %s\\n\", reply);\n    close(fds[0]);\n    return 0;\n}\n",
+    "answer": "beacon replied: HELP US\n",
+    "explain": "The parent sends `help us`; the child uppercases it and sends it back. Only the parent prints.",
+    "warmupEligible": false
+   },
+   "drills": [
+    {
+     "id": "m12-d6",
+     "kind": "predict",
+     "prompt": "What does `fork()` return in the child?",
+     "code": "pid_t pid = fork();",
+     "options": [
+      "0",
+      "The parent's id",
+      "The child's own id",
+      "-1"
+     ],
+     "answer": "0",
+     "explain": "The parent gets the child's id (and -1 if fork failed); the child gets 0."
+    },
+    {
+     "id": "m12-d7",
+     "kind": "predict",
+     "prompt": "Type what this prints (when the output goes to a file, as on the judge).",
+     "code": "#include <stdio.h>\n#include <sys/wait.h>\n#include <unistd.h>\n\nint main(void) {\n    printf(\"ping\\n\");\n    pid_t pid = fork();\n    if (pid == 0) return 0;\n    waitpid(pid, NULL, 0);\n    return 0;\n}\n",
+     "answer": "ping\nping\n",
+     "explain": "`ping` was still sitting in printf's buffer when fork copied the program, buffer and all. Both copies flush it when they finish. `fflush(stdout)` before fork, or `_exit(0)` in the child, prevents it."
+    },
+    {
+     "id": "m12-d8",
+     "kind": "parsons",
+     "prompt": "Order and indent the lines into a parent and child that each close the end they don't use **first**, then do their job.",
+     "lines": [
+      {
+       "text": "pid_t pid = fork();",
+       "indent": 0
+      },
+      {
+       "text": "if (pid == 0) {",
+       "indent": 0
+      },
+      {
+       "text": "close(fds[0]);",
+       "indent": 1
+      },
+      {
+       "text": "serve(fds[1]);",
+       "indent": 1
+      },
+      {
+       "text": "_exit(0);",
+       "indent": 1
+      },
+      {
+       "text": "}",
+       "indent": 0
+      },
+      {
+       "text": "close(fds[1]);",
+       "indent": 0
+      },
+      {
+       "text": "talk(fds[0]);",
+       "indent": 0
+      },
+      {
+       "text": "waitpid(pid, NULL, 0);",
+       "indent": 0
+      }
+     ],
+     "explain": "The child's branch ends in `_exit`, so everything after the `}` only runs in the parent."
+    },
+    {
+     "id": "m12-d9",
+     "kind": "fix",
+     "prompt": "The beacon should send the message back in UPPERCASE, but the parent gets an empty reply. Fix the child.",
+     "code": "#include <stdio.h>\n#include <ctype.h>\n#include <string.h>\n#include <sys/socket.h>\n#include <sys/wait.h>\n#include <unistd.h>\n\nint main(void) {\n    int fds[2];\n    if (socketpair(AF_UNIX, SOCK_STREAM, 0, fds) == -1) {\n        perror(\"socketpair\");\n        return 1;\n    }\n\n    pid_t pid = fork();\n    if (pid == -1) {\n        perror(\"fork\");\n        return 1;\n    }\n    if (pid == 0) {\n        close(fds[1]);\n        char buf[64];\n        ssize_t n = recv(fds[1], buf, sizeof buf, 0);\n        for (ssize_t i = 0; i < n; i++) buf[i] = toupper((unsigned char)buf[i]);\n        send(fds[1], buf, n, 0);\n        _exit(0);\n    }\n\n    close(fds[1]);\n    char msg[64];\n    scanf(\"%63s\", msg);\n    send(fds[0], msg, strlen(msg), 0);\n    char reply[64];\n    ssize_t n = recv(fds[0], reply, sizeof reply - 1, 0);\n    reply[n > 0 ? n : 0] = '\\0';\n    waitpid(pid, NULL, 0);\n    printf(\"beacon replied: %s\\n\", reply);\n    close(fds[0]);\n    return 0;\n}\n",
+     "tests": [
+      {
+       "stdin": "help\n",
+       "expected": "beacon replied: HELP\n",
+       "visible": true
+      },
+      {
+       "stdin": "sos\n",
+       "expected": "beacon replied: SOS\n",
+       "visible": true
+      },
+      {
+       "stdin": "Mayday42\n",
+       "expected": "beacon replied: MAYDAY42\n",
+       "visible": false
+      }
+     ],
+     "solution": "#include <stdio.h>\n#include <ctype.h>\n#include <string.h>\n#include <sys/socket.h>\n#include <sys/wait.h>\n#include <unistd.h>\n\nint main(void) {\n    int fds[2];\n    if (socketpair(AF_UNIX, SOCK_STREAM, 0, fds) == -1) {\n        perror(\"socketpair\");\n        return 1;\n    }\n\n    pid_t pid = fork();\n    if (pid == -1) {\n        perror(\"fork\");\n        return 1;\n    }\n    if (pid == 0) {\n        close(fds[0]);\n        char buf[64];\n        ssize_t n = recv(fds[1], buf, sizeof buf, 0);\n        for (ssize_t i = 0; i < n; i++) buf[i] = toupper((unsigned char)buf[i]);\n        send(fds[1], buf, n, 0);\n        _exit(0);\n    }\n\n    close(fds[1]);\n    char msg[64];\n    scanf(\"%63s\", msg);\n    send(fds[0], msg, strlen(msg), 0);\n    char reply[64];\n    ssize_t n = recv(fds[0], reply, sizeof reply - 1, 0);\n    reply[n > 0 ? n : 0] = '\\0';\n    waitpid(pid, NULL, 0);\n    printf(\"beacon replied: %s\\n\", reply);\n    close(fds[0]);\n    return 0;\n}\n",
+     "explain": "The child closed `fds[1]`, the very end it talks on, so its recv and send fail and the station never gets an answer. Each side closes the **other** end: the one it doesn't use."
+    }
+   ]
+  },
+  {
+   "id": "m12-l3",
+   "title": "Request, reply, hang up",
+   "concept": "Two programs need to agree on what the bytes mean: a **protocol**. The simplest is to send an int's own bytes: `send(fd, &v, sizeof v, 0)`, and on the other side `recv` into an int.\n\nrecv may hand you fewer bytes than you asked for. `MSG_WAITALL` makes it wait until it has them all (or the line closes), so a 4-byte read gives you a whole int.\n\nHow does the server know the client is finished? The client calls `shutdown(fd, SHUT_WR)`: *I'm done sending, but still listening*. The server's next recv returns 0, and it sends its answer.",
+   "example": {
+    "source": "#include <stdio.h>\n#include <sys/socket.h>\n#include <sys/wait.h>\n#include <unistd.h>\n\nint main(void) {\n    int fds[2];\n    if (socketpair(AF_UNIX, SOCK_STREAM, 0, fds) == -1) {\n        perror(\"socketpair\");\n        return 1;\n    }\n\n    pid_t pid = fork();\n    if (pid == -1) {\n        perror(\"fork\");\n        return 1;\n    }\n    if (pid == 0) {                 // server: adds up whatever it's sent\n        close(fds[0]);\n        int v, total = 0;\n        while (recv(fds[1], &v, sizeof v, MSG_WAITALL) == sizeof v) total += v;\n        send(fds[1], &total, sizeof total, 0);\n        close(fds[1]);\n        _exit(0);\n    }\n\n    close(fds[1]);                  // client\n    int readings[] = { 12, 30, 7 };\n    for (int i = 0; i < 3; i++) send(fds[0], &readings[i], sizeof readings[i], 0);\n    shutdown(fds[0], SHUT_WR);      // \"that's everything\"\n\n    int total = 0;\n    recv(fds[0], &total, sizeof total, MSG_WAITALL);\n    waitpid(pid, NULL, 0);\n    printf(\"server says total = %d\\n\", total);\n    close(fds[0]);\n    return 0;\n}\n",
+    "stdin": ""
+   },
+   "predict": {
+    "id": "m12-p3",
+    "kind": "predict",
+    "prompt": "Before you run it: type what it prints.",
+    "code": "#include <stdio.h>\n#include <sys/socket.h>\n#include <sys/wait.h>\n#include <unistd.h>\n\nint main(void) {\n    int fds[2];\n    if (socketpair(AF_UNIX, SOCK_STREAM, 0, fds) == -1) {\n        perror(\"socketpair\");\n        return 1;\n    }\n\n    pid_t pid = fork();\n    if (pid == -1) {\n        perror(\"fork\");\n        return 1;\n    }\n    if (pid == 0) {                 // server: adds up whatever it's sent\n        close(fds[0]);\n        int v, total = 0;\n        while (recv(fds[1], &v, sizeof v, MSG_WAITALL) == sizeof v) total += v;\n        send(fds[1], &total, sizeof total, 0);\n        close(fds[1]);\n        _exit(0);\n    }\n\n    close(fds[1]);                  // client\n    int readings[] = { 12, 30, 7 };\n    for (int i = 0; i < 3; i++) send(fds[0], &readings[i], sizeof readings[i], 0);\n    shutdown(fds[0], SHUT_WR);      // \"that's everything\"\n\n    int total = 0;\n    recv(fds[0], &total, sizeof total, MSG_WAITALL);\n    waitpid(pid, NULL, 0);\n    printf(\"server says total = %d\\n\", total);\n    close(fds[0]);\n    return 0;\n}\n",
+    "answer": "server says total = 49\n",
+    "explain": "The server adds 12, 30 and 7 until shutdown makes its recv return 0, then sends back 49.",
+    "warmupEligible": false
+   },
+   "drills": [
+    {
+     "id": "m12-d10",
+     "kind": "predict",
+     "prompt": "What does `shutdown(fd, SHUT_WR)` tell the other side?",
+     "code": "shutdown(fds[0], SHUT_WR);",
+     "options": [
+      "I'm done sending: your recv will return 0, but I can still receive your reply",
+      "Close the whole connection right now",
+      "Pause until I send again",
+      "Kill the other process"
+     ],
+     "answer": "I'm done sending: your recv will return 0, but I can still receive your reply",
+     "explain": "That half-close is what lets the server finish its loop and still answer."
+    },
+    {
+     "id": "m12-d11",
+     "kind": "predict",
+     "prompt": "Why does the server use `MSG_WAITALL` when it reads an int?",
+     "code": "recv(fd, &v, sizeof v, MSG_WAITALL)",
+     "options": [
+      "recv may return just part of the int; MSG_WAITALL waits for all 4 bytes (or the end)",
+      "Without it recv returns a string",
+      "It makes recv skip bad data",
+      "It's needed for AF_UNIX sockets"
+     ],
+     "answer": "recv may return just part of the int; MSG_WAITALL waits for all 4 bytes (or the end)",
+     "explain": "On a stream, half an int can arrive. Waiting for the full size keeps the two sides in step."
+    },
+    {
+     "id": "m12-d12",
+     "kind": "write",
+     "prompt": "The station sends `n` ints (n ≥ 1), then shuts down its sending side, then expects **two** ints back: how many it sent and the biggest. Write the beacon's `serve`. The rest is done.",
+     "code": "#include <stdio.h>\n#include <sys/socket.h>\n#include <sys/wait.h>\n#include <unistd.h>\n\nvoid serve(int fd) {\n    // receive ints until the station hangs up, then send back count and max\n}\n\nint main(void) {\n    int fds[2];\n    if (socketpair(AF_UNIX, SOCK_STREAM, 0, fds) == -1) {\n        perror(\"socketpair\");\n        return 1;\n    }\n\n    pid_t pid = fork();\n    if (pid == -1) {\n        perror(\"fork\");\n        return 1;\n    }\n    if (pid == 0) {\n        close(fds[0]);\n        serve(fds[1]);\n        close(fds[1]);\n        _exit(0);\n    }\n\n    close(fds[1]);\n    int n, v;\n    scanf(\"%d\", &n);\n    for (int i = 0; i < n; i++) {\n        scanf(\"%d\", &v);\n        send(fds[0], &v, sizeof v, 0);\n    }\n    shutdown(fds[0], SHUT_WR);\n\n    int reply[2] = { 0, 0 };\n    recv(fds[0], reply, sizeof reply, MSG_WAITALL);\n    waitpid(pid, NULL, 0);\n    printf(\"count %d max %d\\n\", reply[0], reply[1]);\n    close(fds[0]);\n    return 0;\n}\n",
+     "tests": [
+      {
+       "stdin": "3\n4 9 2\n",
+       "expected": "count 3 max 9\n",
+       "visible": true
+      },
+      {
+       "stdin": "1\n-5\n",
+       "expected": "count 1 max -5\n",
+       "visible": true
+      },
+      {
+       "stdin": "5\n-3 -1 -7 -2 -9\n",
+       "expected": "count 5 max -1\n",
+       "visible": false
+      },
+      {
+       "stdin": "6\n100 200 300 300 200 100\n",
+       "expected": "count 6 max 300\n",
+       "visible": false
+      }
+     ],
+     "solution": "#include <stdio.h>\n#include <sys/socket.h>\n#include <sys/wait.h>\n#include <unistd.h>\n\nvoid serve(int fd) {\n    int v, count = 0, max = 0;\n    while (recv(fd, &v, sizeof v, MSG_WAITALL) == sizeof v) {\n        if (count == 0 || v > max) max = v;\n        count++;\n    }\n    int reply[2] = { count, max };\n    send(fd, reply, sizeof reply, 0);\n}\n\nint main(void) {\n    int fds[2];\n    if (socketpair(AF_UNIX, SOCK_STREAM, 0, fds) == -1) {\n        perror(\"socketpair\");\n        return 1;\n    }\n\n    pid_t pid = fork();\n    if (pid == -1) {\n        perror(\"fork\");\n        return 1;\n    }\n    if (pid == 0) {\n        close(fds[0]);\n        serve(fds[1]);\n        close(fds[1]);\n        _exit(0);\n    }\n\n    close(fds[1]);\n    int n, v;\n    scanf(\"%d\", &n);\n    for (int i = 0; i < n; i++) {\n        scanf(\"%d\", &v);\n        send(fds[0], &v, sizeof v, 0);\n    }\n    shutdown(fds[0], SHUT_WR);\n\n    int reply[2] = { 0, 0 };\n    recv(fds[0], reply, sizeof reply, MSG_WAITALL);\n    waitpid(pid, NULL, 0);\n    printf(\"count %d max %d\\n\", reply[0], reply[1]);\n    close(fds[0]);\n    return 0;\n}\n",
+     "explain": "Loop until recv stops returning a whole int, track the count and the max (starting from the first value, since they may all be negative), then send both in one go."
+    }
+   ]
+  }
+ ],
+ "checkpoint": [
+  {
+   "id": "m12-cp1",
+   "kind": "predict",
+   "prompt": "What does `socketpair(AF_UNIX, SOCK_STREAM, 0, fds)` give you?",
+   "code": "int fds[2];",
+   "options": [
+    "Two connected ends: what goes into one comes out of the other",
+    "Two separate files",
+    "A connection to the internet",
+    "A copy of the program"
+   ],
+   "answer": "Two connected ends: what goes into one comes out of the other",
+   "explain": "Both ends work in both directions."
+  },
+  {
+   "id": "m12-cp2",
+   "kind": "predict",
+   "prompt": "After fork, how do the two copies tell which one they are?",
+   "code": "pid_t pid = fork();",
+   "options": [
+    "fork returns 0 in the child and the child's id in the parent",
+    "The child gets a different main",
+    "They check a global variable",
+    "They can't"
+   ],
+   "answer": "fork returns 0 in the child and the child's id in the parent",
+   "explain": "`if (pid == 0) { child } else { parent }`."
+  },
+  {
+   "id": "m12-cp3",
+   "kind": "predict",
+   "prompt": "Type what this prints.",
+   "code": "#include <stdio.h>\n#include <sys/socket.h>\n#include <unistd.h>\n\nint main(void) {\n    int fds[2];\n    if (socketpair(AF_UNIX, SOCK_STREAM, 0, fds) == -1) {\n        perror(\"socketpair\");\n        return 1;\n    }\n\n    int sent[3] = { 4, 5, 6 }, got[3] = { 0, 0, 0 };\n    send(fds[0], sent, sizeof sent, 0);\n    recv(fds[1], got, sizeof got, MSG_WAITALL);\n    printf(\"%d %zu\\n\", got[0] + got[1] + got[2], sizeof sent);\n    close(fds[0]);\n    close(fds[1]);\n    return 0;\n}\n",
+   "answer": "15 12\n",
+   "explain": "The array's 12 bytes (3 ints of 4) arrive as they were sent: 4 + 5 + 6 = 15."
+  },
+  {
+   "id": "m12-cp4",
+   "kind": "predict",
+   "prompt": "recv returned 0. What does that mean?",
+   "code": "ssize_t n = recv(fd, buf, sizeof buf, 0);",
+   "options": [
+    "The other side closed or shut down sending: no more data is coming",
+    "A message of length 0 arrived",
+    "An error happened",
+    "Try again later"
+   ],
+   "answer": "The other side closed or shut down sending: no more data is coming",
+   "explain": "0 is the end-of-conversation signal, like EOF for files."
+  },
+  {
+   "id": "m12-cp5",
+   "kind": "predict",
+   "prompt": "Why does the child finish with `_exit(0)` instead of `return 0`?",
+   "code": "if (pid == 0) {\n    /* ... */\n    _exit(0);\n}",
+   "options": [
+    "It leaves without flushing the stdout buffer it copied from the parent, so nothing prints twice",
+    "return doesn't work in a child",
+    "_exit also kills the parent",
+    "It's faster to type"
+   ],
+   "answer": "It leaves without flushing the stdout buffer it copied from the parent, so nothing prints twice",
+   "explain": "Remember `ping ping`: the child inherited the parent's unprinted output."
+  }
+ ]
+}

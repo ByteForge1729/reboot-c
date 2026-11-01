@@ -1,0 +1,50 @@
+{
+  "id": "m6-b1",
+  "title": "Reverse the Transmission",
+  "difficulty": "easy",
+  "story": "A garbled transmission arrived backwards.\n\nInput: one word (letters and digits, 1–100 characters, no spaces).\n\nOutput: the word reversed.\n\nExample: `HELLO` prints `OLLEH`.",
+  "starter": "#include <stdio.h>\n#include <string.h>\n\nint main(void) {\n    char word[101];\n    scanf(\"%100s\", word);\n    // print it backwards\n    return 0;\n}\n",
+  "tests": [
+    {
+      "stdin": "HELLO\n",
+      "expected": "OLLEH\n",
+      "visible": true
+    },
+    {
+      "stdin": "a\n",
+      "expected": "a\n",
+      "visible": true
+    },
+    {
+      "stdin": "station\n",
+      "expected": "noitats\n",
+      "visible": true
+    },
+    {
+      "stdin": "racecar\n",
+      "expected": "racecar\n",
+      "visible": false
+    },
+    {
+      "stdin": "AbC123\n",
+      "expected": "321CbA\n",
+      "visible": false
+    },
+    {
+      "stdin": "xy\n",
+      "expected": "yx\n",
+      "visible": false
+    },
+    {
+      "stdin": "KERNEL7\n",
+      "expected": "7LENREK\n",
+      "visible": false
+    }
+  ],
+  "hints": [
+    "`strlen(word)` tells you how many characters there are.",
+    "The last character is at index `strlen(word) - 1`, the first at 0.",
+    "Loop i from `len - 1` down to 0, printing `word[i]` with `%c`, then a new line."
+  ],
+  "solution": "#include <stdio.h>\n#include <string.h>\n\nint main(void) {\n    char word[101];\n    scanf(\"%100s\", word);\n    int len = strlen(word);\n    for (int i = len - 1; i >= 0; i--) {\n        printf(\"%c\", word[i]);\n    }\n    printf(\"\\n\");\n    return 0;\n}\n"
+}

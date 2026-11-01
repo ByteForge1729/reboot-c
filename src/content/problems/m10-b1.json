@@ -1,0 +1,50 @@
+{
+  "id": "m10-b1",
+  "title": "Signal Spread",
+  "difficulty": "easy",
+  "story": "The translator rates a burst of signals by its **spread**: the strongest minus the weakest.\n\nWrite `int span(int count, ...)`: it gets `count` whole numbers (at least one) and returns the largest minus the smallest.\n\n`main` is written for you. It reads 5 numbers `a b c d e` (each between -1000000 and 1000000) and prints `span(5, a, b, c, d, e)`, `span(3, a, b, c)` and `span(1, e)`, one per line.\n\nExample: `4 9 1 7 3` prints `8`, `8`, `0`.",
+  "starter": "#include <stdio.h>\n#include <stdarg.h>\n\nint span(int count, ...) {\n    return 0;\n}\n\nint main(void) {\n    int a, b, c, d, e;\n    scanf(\"%d %d %d %d %d\", &a, &b, &c, &d, &e);\n    printf(\"%d\\n\", span(5, a, b, c, d, e));\n    printf(\"%d\\n\", span(3, a, b, c));\n    printf(\"%d\\n\", span(1, e));\n    return 0;\n}\n",
+  "tests": [
+    {
+      "stdin": "4 9 1 7 3\n",
+      "expected": "8\n8\n0\n",
+      "visible": true
+    },
+    {
+      "stdin": "5 5 5 5 5\n",
+      "expected": "0\n0\n0\n",
+      "visible": true
+    },
+    {
+      "stdin": "-3 -9 -1 -7 -2\n",
+      "expected": "8\n8\n0\n",
+      "visible": true
+    },
+    {
+      "stdin": "0 1000000 -1000000 2 3\n",
+      "expected": "2000000\n2000000\n0\n",
+      "visible": false
+    },
+    {
+      "stdin": "10 2 30 4 50\n",
+      "expected": "48\n28\n0\n",
+      "visible": false
+    },
+    {
+      "stdin": "-1 0 1 0 -1\n",
+      "expected": "2\n2\n0\n",
+      "visible": false
+    },
+    {
+      "stdin": "999 -999 0 1 2\n",
+      "expected": "1998\n1998\n0\n",
+      "visible": false
+    }
+  ],
+  "hints": [
+    "Start the va_list after `count`, then read the first number with `va_arg(args, int)`. It's both the smallest and the largest seen so far.",
+    "Loop `count - 1` more times, updating the smallest and largest as you go.",
+    "Don't start min and max at 0: with all-negative readings the max would wrongly stay 0. Starting from the first value fixes that, and `span(1, e)` is then 0. Remember `va_end`."
+  ],
+  "solution": "#include <stdio.h>\n#include <stdarg.h>\n\nint span(int count, ...) {\n    va_list args;\n    va_start(args, count);\n    int first = va_arg(args, int);\n    int lo = first, hi = first;\n    for (int i = 1; i < count; i++) {\n        int v = va_arg(args, int);\n        if (v < lo) lo = v;\n        if (v > hi) hi = v;\n    }\n    va_end(args);\n    return hi - lo;\n}\n\nint main(void) {\n    int a, b, c, d, e;\n    scanf(\"%d %d %d %d %d\", &a, &b, &c, &d, &e);\n    printf(\"%d\\n\", span(5, a, b, c, d, e));\n    printf(\"%d\\n\", span(3, a, b, c));\n    printf(\"%d\\n\", span(1, e));\n    return 0;\n}\n"
+}

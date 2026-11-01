@@ -1,0 +1,486 @@
+{
+ "missionId": 9,
+ "cheatsheet": "**Opening**\n`FILE *f = fopen(\"log.txt\", \"r\");` · modes `\"r\"` read, `\"w\"` write (wipes), `\"a\"` append · `if (f == NULL) { ... }`\n\n**Reading**\n`while (fgets(line, sizeof line, f) != NULL)` · `fscanf(f, \"%d\", &x)` · then `fclose(f);`\n\n**Writing**\n`fprintf(f, \"speed %d\\n\", speed);`\n\n**Errors**\nCalls return failure (NULL, EOF, fewer values). `strerror(errno)` says why; `perror(\"name\")` prints it to stderr.\n\n**Parsing lines**\n`if (sscanf(line, \"%31s %d\", name, &age) == 2)` · scanf/sscanf return how many values they filled",
+ "lessons": [
+  {
+   "id": "m9-l1",
+   "title": "Files: open, write, read, close",
+   "concept": "A file is opened with `FILE *f = fopen(\"flight.log\", \"w\");`. The mode says what you'll do: `\"r\"` read, `\"w\"` write (wipes the file first), `\"a\"` add to the end.\n\nWriting is `fprintf(f, ...)`, exactly like printf with the file in front. Reading a line is `fgets(line, sizeof line, f)`, which returns `NULL` when there's nothing left, so it makes a perfect loop condition.\n\n`fopen` returns `NULL` when it can't open the file. Always check, and `fclose(f)` when you're done.",
+   "example": {
+    "source": "#include <stdio.h>\n\nint main(void) {\n    FILE *out = fopen(\"flight.log\", \"w\");\n    if (out == NULL) {\n        perror(\"flight.log\");\n        return 1;\n    }\n    fprintf(out, \"altitude %d\\n\", 1200);\n    fprintf(out, \"speed %d\\n\", 340);\n    fclose(out);\n\n    FILE *in = fopen(\"flight.log\", \"r\");\n    if (in == NULL) {\n        perror(\"flight.log\");\n        return 1;\n    }\n    char line[64];\n    int n = 0;\n    while (fgets(line, sizeof line, in) != NULL) {\n        n++;\n        printf(\"%d: %s\", n, line);\n    }\n    fclose(in);\n    return 0;\n}\n",
+    "stdin": ""
+   },
+   "predict": {
+    "id": "m9-p1",
+    "kind": "predict",
+    "prompt": "Before you run it: type what it prints.",
+    "code": "#include <stdio.h>\n\nint main(void) {\n    FILE *out = fopen(\"flight.log\", \"w\");\n    if (out == NULL) {\n        perror(\"flight.log\");\n        return 1;\n    }\n    fprintf(out, \"altitude %d\\n\", 1200);\n    fprintf(out, \"speed %d\\n\", 340);\n    fclose(out);\n\n    FILE *in = fopen(\"flight.log\", \"r\");\n    if (in == NULL) {\n        perror(\"flight.log\");\n        return 1;\n    }\n    char line[64];\n    int n = 0;\n    while (fgets(line, sizeof line, in) != NULL) {\n        n++;\n        printf(\"%d: %s\", n, line);\n    }\n    fclose(in);\n    return 0;\n}\n",
+    "answer": "1: altitude 1200\n2: speed 340\n",
+    "explain": "It writes two lines, closes the file, then reads them back and numbers them. fgets keeps each line's `\\n`, so printf doesn't add one.",
+    "warmupEligible": false
+   },
+   "drills": [
+    {
+     "id": "m9-d1",
+     "kind": "predict",
+     "prompt": "What does mode `\"a\"` do?",
+     "code": "FILE *f = fopen(\"crew.txt\", \"a\");",
+     "options": [
+      "Adds to the end of the file, keeping what's already there",
+      "Opens it for reading only",
+      "Wipes the file, then writes",
+      "Makes a new file called crew.txt.a"
+     ],
+     "answer": "Adds to the end of the file, keeping what's already there",
+     "explain": "`\"a\"` is append. If the file doesn't exist yet, it's created."
+    },
+    {
+     "id": "m9-d2",
+     "kind": "predict",
+     "prompt": "Type what this prints.",
+     "code": "#include <stdio.h>\n\nint main(void) {\n    FILE *f = fopen(\"note.txt\", \"w\");\n    if (f == NULL) return 1;\n    fprintf(f, \"A\\n\");\n    fclose(f);\n\n    f = fopen(\"note.txt\", \"w\");\n    if (f == NULL) return 1;\n    fprintf(f, \"B\\n\");\n    fclose(f);\n\n    f = fopen(\"note.txt\", \"a\");\n    if (f == NULL) return 1;\n    fprintf(f, \"C\\n\");\n    fclose(f);\n\n    f = fopen(\"note.txt\", \"r\");\n    if (f == NULL) return 1;\n    char line[16];\n    while (fgets(line, sizeof line, f) != NULL) printf(\"%s\", line);\n    fclose(f);\n    return 0;\n}\n",
+     "answer": "B\nC\n",
+     "explain": "The second `\"w\"` wipes the A. Then `\"a\"` adds C after B."
+    },
+    {
+     "id": "m9-d3",
+     "kind": "fill",
+     "prompt": "Fill the blanks to print every line of `cargo.txt` (the mode goes in with its quotes).",
+     "code": "FILE *f = fopen(\"cargo.txt\", ___);\nif (f == NULL) return 1;\nchar line[64];\nwhile (___(line, sizeof line, f) != NULL) printf(\"%s\", line);\n___(f);",
+     "blanks": [
+      [
+       "\"r\""
+      ],
+      [
+       "fgets"
+      ],
+      [
+       "fclose"
+      ]
+     ],
+     "explain": "Open for reading with `\"r\"`, read line by line with `fgets` until it returns NULL, then `fclose`."
+    },
+    {
+     "id": "m9-d4",
+     "kind": "fix",
+     "prompt": "This numbers the lines of `cargo.txt`, but the last line always shows up twice. Fix the loop.",
+     "code": "#include <stdio.h>\n\nint main(void) {\n    FILE *f = fopen(\"cargo.txt\", \"r\");\n    if (f == NULL) {\n        printf(\"no cargo list\\n\");\n        return 0;\n    }\n    char line[64];\n    int n = 0;\n    while (!feof(f)) {\n        fgets(line, sizeof line, f);\n        n++;\n        printf(\"%d. %s\", n, line);\n    }\n    fclose(f);\n    return 0;\n}\n",
+     "tests": [
+      {
+       "stdin": "",
+       "expected": "1. fuel\n2. water\n",
+       "visible": true,
+       "files": {
+        "cargo.txt": "fuel\nwater\n"
+       }
+      },
+      {
+       "stdin": "",
+       "expected": "1. oxygen\n",
+       "visible": true,
+       "files": {
+        "cargo.txt": "oxygen\n"
+       }
+      },
+      {
+       "stdin": "",
+       "expected": "1. a\n2. b\n3. c\n",
+       "visible": false,
+       "files": {
+        "cargo.txt": "a\nb\nc\n"
+       }
+      },
+      {
+       "stdin": "",
+       "expected": "",
+       "visible": false,
+       "files": {
+        "cargo.txt": ""
+       }
+      }
+     ],
+     "solution": "#include <stdio.h>\n\nint main(void) {\n    FILE *f = fopen(\"cargo.txt\", \"r\");\n    if (f == NULL) {\n        printf(\"no cargo list\\n\");\n        return 0;\n    }\n    char line[64];\n    int n = 0;\n    while (fgets(line, sizeof line, f) != NULL) {\n        n++;\n        printf(\"%d. %s\", n, line);\n    }\n    fclose(f);\n    return 0;\n}\n",
+     "explain": "`feof` only turns true **after** a read has already failed. So the loop runs once more, fgets fails and leaves the old line in the buffer, and it's printed again. Loop on fgets itself."
+    },
+    {
+     "id": "m9-d5",
+     "kind": "write",
+     "prompt": "Print how many lines `log.txt` has. (Every line ends with a newline.)",
+     "code": "#include <stdio.h>\n\nint main(void) {\n    FILE *f = fopen(\"log.txt\", \"r\");\n    if (f == NULL) {\n        perror(\"log.txt\");\n        return 1;\n    }\n    // count the lines\n    fclose(f);\n    return 0;\n}\n",
+     "tests": [
+      {
+       "stdin": "",
+       "expected": "3\n",
+       "visible": true,
+       "files": {
+        "log.txt": "boot ok\nfans on\nall good\n"
+       }
+      },
+      {
+       "stdin": "",
+       "expected": "1\n",
+       "visible": true,
+       "files": {
+        "log.txt": "one line\n"
+       }
+      },
+      {
+       "stdin": "",
+       "expected": "0\n",
+       "visible": false,
+       "files": {
+        "log.txt": ""
+       }
+      },
+      {
+       "stdin": "",
+       "expected": "5\n",
+       "visible": false,
+       "files": {
+        "log.txt": "a\nb\n\nd\ne\n"
+       }
+      }
+     ],
+     "solution": "#include <stdio.h>\n\nint main(void) {\n    FILE *f = fopen(\"log.txt\", \"r\");\n    if (f == NULL) {\n        perror(\"log.txt\");\n        return 1;\n    }\n    char line[256];\n    int count = 0;\n    while (fgets(line, sizeof line, f) != NULL) count++;\n    printf(\"%d\\n\", count);\n    fclose(f);\n    return 0;\n}\n",
+     "explain": "Each successful fgets is one line. Note the empty line in the last test still counts: it's just `\\n`."
+    }
+   ]
+  },
+  {
+   "id": "m9-l2",
+   "title": "When things go wrong",
+   "concept": "In C nothing throws an error at you: functions **return** a sign that they failed, and it's on you to look. fopen returns `NULL`; scanf returns how many values it managed to read.\n\nWhen a library call fails it also sets `errno` (from `<errno.h>`) to a code saying why. `strerror(errno)` (from `<string.h>`) turns it into words like *No such file or directory*.\n\n`perror(\"main.log\")` prints the same thing to **stderr**, a second output stream meant for errors. The judge only compares stdout, so use printf when the message is part of the expected output.",
+   "example": {
+    "source": "#include <stdio.h>\n#include <errno.h>\n#include <string.h>\n\nFILE *open_log(const char *name) {\n    FILE *f = fopen(name, \"r\");\n    if (f == NULL) printf(\"can't open %s: %s\\n\", name, strerror(errno));\n    return f;\n}\n\nint main(void) {\n    FILE *backup = fopen(\"backup.log\", \"w\");\n    if (backup == NULL) return 1;\n    fprintf(backup, \"all systems nominal\\n\");\n    fclose(backup);\n\n    FILE *f = open_log(\"main.log\");\n    if (f == NULL) f = open_log(\"backup.log\");\n    if (f == NULL) return 1;\n\n    char line[64];\n    if (fgets(line, sizeof line, f) != NULL) printf(\"read: %s\", line);\n    fclose(f);\n    return 0;\n}\n",
+    "stdin": ""
+   },
+   "predict": {
+    "id": "m9-p2",
+    "kind": "predict",
+    "prompt": "Before you run it: type what it prints.",
+    "code": "#include <stdio.h>\n#include <errno.h>\n#include <string.h>\n\nFILE *open_log(const char *name) {\n    FILE *f = fopen(name, \"r\");\n    if (f == NULL) printf(\"can't open %s: %s\\n\", name, strerror(errno));\n    return f;\n}\n\nint main(void) {\n    FILE *backup = fopen(\"backup.log\", \"w\");\n    if (backup == NULL) return 1;\n    fprintf(backup, \"all systems nominal\\n\");\n    fclose(backup);\n\n    FILE *f = open_log(\"main.log\");\n    if (f == NULL) f = open_log(\"backup.log\");\n    if (f == NULL) return 1;\n\n    char line[64];\n    if (fgets(line, sizeof line, f) != NULL) printf(\"read: %s\", line);\n    fclose(f);\n    return 0;\n}\n",
+    "answer": "can't open main.log: No such file or directory\nread: all systems nominal\n",
+    "explain": "main.log doesn't exist, so the first open fails and says why; the backup it wrote a moment ago opens fine.",
+    "warmupEligible": false
+   },
+   "drills": [
+    {
+     "id": "m9-d6",
+     "kind": "predict",
+     "prompt": "`perror(\"log.txt\")` prints `log.txt: No such file or directory`. Where does it go?",
+     "code": "if (f == NULL) perror(\"log.txt\");",
+     "options": [
+      "To stderr, a separate stream, so the judge's output check never sees it",
+      "To stdout, like printf",
+      "Into log.txt",
+      "Nowhere until you call fflush"
+     ],
+     "answer": "To stderr, a separate stream, so the judge's output check never sees it",
+     "explain": "stderr is for error messages: you see them in the run results, but they never mix into the output being checked."
+    },
+    {
+     "id": "m9-d7",
+     "kind": "predict",
+     "prompt": "What does fopen give back when the file isn't there?",
+     "code": "FILE *f = fopen(\"ghost.txt\", \"r\");",
+     "options": [
+      "NULL, and errno says why",
+      "An empty file",
+      "It stops the program",
+      "The number 0 in errno only"
+     ],
+     "answer": "NULL, and errno says why",
+     "explain": "Using that NULL in fgets or fscanf crashes the program, which is why every fopen gets an `if (f == NULL)`."
+    },
+    {
+     "id": "m9-d8",
+     "kind": "fix",
+     "prompt": "Read the fuel level from `fuel.txt` and print `fuel N`. If the file is missing **or** doesn't start with a number, print `fuel unknown`. Right now a missing file crashes it.",
+     "code": "#include <stdio.h>\n\nint main(void) {\n    FILE *f = fopen(\"fuel.txt\", \"r\");\n    int litres;\n    fscanf(f, \"%d\", &litres);\n    printf(\"fuel %d\\n\", litres);\n    fclose(f);\n    return 0;\n}\n",
+     "tests": [
+      {
+       "stdin": "",
+       "expected": "fuel 75\n",
+       "visible": true,
+       "files": {
+        "fuel.txt": "75\n"
+       }
+      },
+      {
+       "stdin": "",
+       "expected": "fuel unknown\n",
+       "visible": true
+      },
+      {
+       "stdin": "",
+       "expected": "fuel 0\n",
+       "visible": false,
+       "files": {
+        "fuel.txt": "0\n"
+       }
+      },
+      {
+       "stdin": "",
+       "expected": "fuel unknown\n",
+       "visible": false,
+       "files": {
+        "fuel.txt": "empty\n"
+       }
+      }
+     ],
+     "solution": "#include <stdio.h>\n\nint main(void) {\n    FILE *f = fopen(\"fuel.txt\", \"r\");\n    if (f == NULL) {\n        printf(\"fuel unknown\\n\");\n        return 0;\n    }\n    int litres;\n    if (fscanf(f, \"%d\", &litres) == 1) printf(\"fuel %d\\n\", litres);\n    else printf(\"fuel unknown\\n\");\n    fclose(f);\n    return 0;\n}\n",
+     "explain": "Two checks: fopen's NULL for the missing file, and fscanf's return value (1 means it read one number) for a file with junk in it."
+    },
+    {
+     "id": "m9-d9",
+     "kind": "write",
+     "prompt": "The input is words separated by spaces. Some are whole numbers, some aren't. Add up the numbers and count the rest, then print `sum S, bad B`.\n\nUse scanf's return value: `1` means it read a number, `0` means the next word isn't one (skip it with `scanf(\"%*s\")`), `EOF` means the input is finished.",
+     "code": "#include <stdio.h>\n\nint main(void) {\n    int value, sum = 0, bad = 0;\n    // loop on scanf's return value\n    printf(\"sum %d, bad %d\\n\", sum, bad);\n    return 0;\n}\n",
+     "tests": [
+      {
+       "stdin": "5 abc 7 x 3\n",
+       "expected": "sum 15, bad 2\n",
+       "visible": true
+      },
+      {
+       "stdin": "1 2 3\n",
+       "expected": "sum 6, bad 0\n",
+       "visible": true
+      },
+      {
+       "stdin": "hello\n",
+       "expected": "sum 0, bad 1\n",
+       "visible": false
+      },
+      {
+       "stdin": "",
+       "expected": "sum 0, bad 0\n",
+       "visible": false
+      },
+      {
+       "stdin": "-4 minus 4\n",
+       "expected": "sum 0, bad 1\n",
+       "visible": false
+      }
+     ],
+     "solution": "#include <stdio.h>\n\nint main(void) {\n    int value, sum = 0, bad = 0, got;\n    while ((got = scanf(\"%d\", &value)) != EOF) {\n        if (got == 1) {\n            sum += value;\n        } else {\n            scanf(\"%*s\");\n            bad++;\n        }\n    }\n    printf(\"sum %d, bad %d\\n\", sum, bad);\n    return 0;\n}\n",
+     "explain": "When scanf returns 0 it hasn't moved past the bad word, so without the `%*s` skip it would fail on the same word forever."
+    }
+   ]
+  },
+  {
+   "id": "m9-l3",
+   "title": "Reading records safely",
+   "concept": "Real files have broken lines. The safe pattern is: read a whole line with `fgets`, then pick it apart with `sscanf`, which is scanf reading from a string.\n\nsscanf returns how many values it filled. For `\"%31s %d\"` that's 2 when the line is good; anything less means skip it. (`%31s` stops a long word from overflowing a 32-char array.)\n\nBecause you already have the whole line, a bad one can't knock the rest of the file out of step.",
+   "example": {
+    "source": "#include <stdio.h>\n\nint main(void) {\n    FILE *f = fopen(\"crew.txt\", \"w\");\n    if (f == NULL) return 1;\n    fprintf(f, \"Asha 31\\nRavi 27\\n???\\nMeera 45\\n\");\n    fclose(f);\n\n    f = fopen(\"crew.txt\", \"r\");\n    if (f == NULL) return 1;\n    char line[80], name[32];\n    int age, total = 0, count = 0;\n    while (fgets(line, sizeof line, f) != NULL) {\n        if (sscanf(line, \"%31s %d\", name, &age) != 2) {\n            printf(\"skipped: %s\", line);\n            continue;\n        }\n        total += age;\n        count++;\n    }\n    fclose(f);\n    printf(\"%d crew, average age %d\\n\", count, total / count);\n    return 0;\n}\n",
+    "stdin": ""
+   },
+   "predict": {
+    "id": "m9-p3",
+    "kind": "predict",
+    "prompt": "Before you run it: type what it prints.",
+    "code": "#include <stdio.h>\n\nint main(void) {\n    FILE *f = fopen(\"crew.txt\", \"w\");\n    if (f == NULL) return 1;\n    fprintf(f, \"Asha 31\\nRavi 27\\n???\\nMeera 45\\n\");\n    fclose(f);\n\n    f = fopen(\"crew.txt\", \"r\");\n    if (f == NULL) return 1;\n    char line[80], name[32];\n    int age, total = 0, count = 0;\n    while (fgets(line, sizeof line, f) != NULL) {\n        if (sscanf(line, \"%31s %d\", name, &age) != 2) {\n            printf(\"skipped: %s\", line);\n            continue;\n        }\n        total += age;\n        count++;\n    }\n    fclose(f);\n    printf(\"%d crew, average age %d\\n\", count, total / count);\n    return 0;\n}\n",
+    "answer": "skipped: ???\n3 crew, average age 34\n",
+    "explain": "`???` fills the name but no age, so sscanf returns 1 and it's skipped. 31 + 27 + 45 = 103, and 103 / 3 is 34 in whole numbers.",
+    "warmupEligible": false
+   },
+   "drills": [
+    {
+     "id": "m9-d10",
+     "kind": "predict",
+     "prompt": "Type what this prints.",
+     "code": "int a = 0, b = 0;\nint n = sscanf(\"12 apples\", \"%d %d\", &a, &b);\nprintf(\"%d %d\\n\", n, a);",
+     "answer": "1 12\n",
+     "explain": "It reads 12 into a, then `apples` isn't a number, so it stops: one value filled."
+    },
+    {
+     "id": "m9-d11",
+     "kind": "parsons",
+     "prompt": "Order and indent the lines to add one entry to `events.log`, giving up cleanly if it can't be opened.",
+     "lines": [
+      {
+       "text": "FILE *f = fopen(\"events.log\", \"a\");",
+       "indent": 0
+      },
+      {
+       "text": "if (f == NULL) {",
+       "indent": 0
+      },
+      {
+       "text": "perror(\"events.log\");",
+       "indent": 1
+      },
+      {
+       "text": "return 1;",
+       "indent": 1
+      },
+      {
+       "text": "}",
+       "indent": 0
+      },
+      {
+       "text": "fprintf(f, \"docked\\n\");",
+       "indent": 0
+      },
+      {
+       "text": "fclose(f);",
+       "indent": 0
+      }
+     ],
+     "explain": "Open, check, write, close: the shape of almost every file job."
+    },
+    {
+     "id": "m9-d12",
+     "kind": "write",
+     "prompt": "`tanks.txt` starts with a header line `tank litres`, then one tank per line, like `A 120`. Print `total T`, the litres added up.",
+     "code": "#include <stdio.h>\n\nint main(void) {\n    FILE *f = fopen(\"tanks.txt\", \"r\");\n    if (f == NULL) {\n        perror(\"tanks.txt\");\n        return 1;\n    }\n    // add up the litres\n    fclose(f);\n    return 0;\n}\n",
+     "tests": [
+      {
+       "stdin": "",
+       "expected": "total 200\n",
+       "visible": true,
+       "files": {
+        "tanks.txt": "tank litres\nA 120\nB 80\n"
+       }
+      },
+      {
+       "stdin": "",
+       "expected": "total 0\n",
+       "visible": true,
+       "files": {
+        "tanks.txt": "tank litres\n"
+       }
+      },
+      {
+       "stdin": "",
+       "expected": "total 1006\n",
+       "visible": false,
+       "files": {
+        "tanks.txt": "tank litres\nMAIN 500\nAUX 250\nR1 255\nR2 1\n"
+       }
+      },
+      {
+       "stdin": "",
+       "expected": "total 9\n",
+       "visible": false,
+       "files": {
+        "tanks.txt": "tank litres\nX 9\n"
+       }
+      }
+     ],
+     "solution": "#include <stdio.h>\n\nint main(void) {\n    FILE *f = fopen(\"tanks.txt\", \"r\");\n    if (f == NULL) {\n        perror(\"tanks.txt\");\n        return 1;\n    }\n    char line[80], tank[32];\n    int litres, total = 0;\n    while (fgets(line, sizeof line, f) != NULL) {\n        if (sscanf(line, \"%31s %d\", tank, &litres) == 2) total += litres;\n    }\n    printf(\"total %d\\n\", total);\n    fclose(f);\n    return 0;\n}\n",
+     "explain": "The header gives sscanf a word but no number, so `== 2` skips it for free. (Reading and throwing away the first line works too.)"
+    },
+    {
+     "id": "m9-d13",
+     "kind": "fix",
+     "prompt": "This averages the crew's ages from `crew.txt`, but a broken line sneaks into the count. Fix the check.",
+     "code": "#include <stdio.h>\n\nint main(void) {\n    FILE *f = fopen(\"crew.txt\", \"r\");\n    if (f == NULL) {\n        perror(\"crew.txt\");\n        return 1;\n    }\n    char line[80], name[32];\n    int age, total = 0, count = 0;\n    while (fgets(line, sizeof line, f) != NULL) {\n        if (!sscanf(line, \"%31s %d\", name, &age)) continue;\n        total += age;\n        count++;\n    }\n    fclose(f);\n    printf(\"%d crew, average age %d\\n\", count, total / count);\n    return 0;\n}\n",
+     "tests": [
+      {
+       "stdin": "",
+       "expected": "3 crew, average age 34\n",
+       "visible": true,
+       "files": {
+        "crew.txt": "Asha 31\nRavi 27\n???\nMeera 45\n"
+       }
+      },
+      {
+       "stdin": "",
+       "expected": "1 crew, average age 40\n",
+       "visible": true,
+       "files": {
+        "crew.txt": "Zed 40\n"
+       }
+      },
+      {
+       "stdin": "",
+       "expected": "2 crew, average age 25\n",
+       "visible": false,
+       "files": {
+        "crew.txt": "Kim 20\nbroken\nLee 30\n"
+       }
+      },
+      {
+       "stdin": "",
+       "expected": "1 crew, average age 50\n",
+       "visible": false,
+       "files": {
+        "crew.txt": "oops\nAl 50\n"
+       }
+      }
+     ],
+     "solution": "#include <stdio.h>\n\nint main(void) {\n    FILE *f = fopen(\"crew.txt\", \"r\");\n    if (f == NULL) {\n        perror(\"crew.txt\");\n        return 1;\n    }\n    char line[80], name[32];\n    int age, total = 0, count = 0;\n    while (fgets(line, sizeof line, f) != NULL) {\n        if (sscanf(line, \"%31s %d\", name, &age) != 2) continue;\n        total += age;\n        count++;\n    }\n    fclose(f);\n    printf(\"%d crew, average age %d\\n\", count, total / count);\n    return 0;\n}\n",
+     "explain": "A broken line still fills the name, so sscanf returns 1, which counts as true. The line is good only when it returns exactly 2."
+    }
+   ]
+  }
+ ],
+ "checkpoint": [
+  {
+   "id": "m9-cp1",
+   "kind": "predict",
+   "prompt": "Which mode wipes the file and starts it fresh?",
+   "code": "FILE *f = fopen(\"report.txt\", ___);",
+   "options": [
+    "\"w\"",
+    "\"r\"",
+    "\"a\"",
+    "\"r+\""
+   ],
+   "answer": "\"w\"",
+   "explain": "`\"w\"` truncates; `\"a\"` keeps the old contents and adds to the end."
+  },
+  {
+   "id": "m9-cp2",
+   "kind": "predict",
+   "prompt": "Why loop on `fgets(...) != NULL` instead of `while (!feof(f))`?",
+   "code": "while (fgets(line, sizeof line, f) != NULL) { ... }",
+   "options": [
+    "feof only turns true after a read has already failed, so the last line repeats",
+    "feof is slower",
+    "feof doesn't work on text files",
+    "fgets closes the file for you"
+   ],
+   "answer": "feof only turns true after a read has already failed, so the last line repeats",
+   "explain": "Let the read itself tell you it's done."
+  },
+  {
+   "id": "m9-cp3",
+   "kind": "predict",
+   "prompt": "Type what this prints.",
+   "code": "int a = 0, b = 0;\nint n = sscanf(\"7,9\", \"%d,%d\", &a, &b);\nprintf(\"%d %d %d\\n\", n, a, b);",
+   "answer": "2 7 9\n",
+   "explain": "The comma in the format matches the comma in the text, so both numbers are filled."
+  },
+  {
+   "id": "m9-cp4",
+   "kind": "predict",
+   "prompt": "fopen just returned NULL. Which line prints **why**, as words, to stdout?",
+   "code": "FILE *f = fopen(name, \"r\");",
+   "options": [
+    "printf(\"%s\\n\", strerror(errno));",
+    "printf(\"%d\\n\", f);",
+    "printf(\"%s\\n\", errno);",
+    "printf(perror());"
+   ],
+   "answer": "printf(\"%s\\n\", strerror(errno));",
+   "explain": "errno holds a code; strerror turns it into a message (and perror would send it to stderr instead)."
+  },
+  {
+   "id": "m9-cp5",
+   "kind": "predict",
+   "prompt": "What do you do with every `FILE *` you opened, once you're done with it?",
+   "code": "FILE *f = fopen(\"log.txt\", \"r\");",
+   "options": [
+    "fclose it",
+    "free it",
+    "set it to NULL",
+    "nothing, files close themselves"
+   ],
+   "answer": "fclose it",
+   "explain": "fclose flushes anything still waiting to be written and releases the file."
+  }
+ ]
+}

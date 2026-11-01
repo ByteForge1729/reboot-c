@@ -1,0 +1,192 @@
+{
+  "missionId": 0,
+  "cheatsheet": "**Every program**\n`#include <stdio.h>` at the top, then `int main(void) { ... return 0; }`. The computer starts at `main`.\n\n**Printing**\n`printf(\"text\\n\");` prints text. Every statement ends with `;`.\n\n**Escapes inside quotes**\n`\\n` new line · `\\t` tab · `\\\"` a quote mark · `\\\\` a backslash\n\n**Comments**\n`// to the end of the line` and `/* across lines */`. The compiler ignores both.\n\n**When it won't compile**\nRead the first error only. The line number is usually right, or one line below the real mistake.",
+  "lessons": [
+    {
+      "id": "m0-l1",
+      "title": "Hello, station",
+      "concept": "A program is a list of instructions the computer follows **top to bottom**.\n\nIn C, it always starts at `main`. Everything between `main`'s `{` and `}` runs in order.\n\n`printf` prints text. The text goes inside quotes, and `\\n` means \"new line\". Each instruction ends with `;`, like a full stop.\n\nThe first line, `#include <stdio.h>`, brings in `printf`. Without it, C doesn't know what printing is.",
+      "example": {
+        "source": "#include <stdio.h>\n\nint main(void) {\n    printf(\"SIGMA online.\\n\");\n    return 0;\n}\n"
+      },
+      "predict": {
+        "id": "m0-p1",
+        "kind": "predict",
+        "prompt": "Before you run it: what will this program print?",
+        "code": "#include <stdio.h>\n\nint main(void) {\n    printf(\"SIGMA online.\\n\");\n    return 0;\n}\n",
+        "options": ["SIGMA online.", "printf(\"SIGMA online.\")", "SIGMA online.\\n", "Nothing: it needs input first"],
+        "answer": "SIGMA online.",
+        "explain": "Only the text inside the quotes is printed. `\\n` isn't shown: it moves to a new line."
+      },
+      "drills": [
+        {
+          "id": "m0-d1",
+          "kind": "fill",
+          "prompt": "Fill in the two missing words so this program compiles.",
+          "code": "#include <___>\n\nint ___(void) {\n    printf(\"Power: low\\n\");\n    return 0;\n}",
+          "blanks": [["stdio.h"], ["main"]],
+          "explain": "`stdio.h` brings in `printf`, and every program starts at `main`."
+        },
+        {
+          "id": "m0-d2",
+          "kind": "predict",
+          "prompt": "Type exactly what this prints.",
+          "code": "printf(\"A\");\nprintf(\"B\");\nprintf(\"\\n\");",
+          "answer": "AB\n",
+          "explain": "Without `\\n`, the next printf carries on on the same line. So `A` and `B` end up side by side."
+        },
+        {
+          "id": "m0-d3",
+          "kind": "parsons",
+          "prompt": "Put the lines in order, with the right indents, to make a working program.",
+          "lines": [
+            { "text": "#include <stdio.h>", "indent": 0 },
+            { "text": "int main(void) {", "indent": 0 },
+            { "text": "printf(\"Hello, KERNEL-7\\n\");", "indent": 1 },
+            { "text": "return 0;", "indent": 1 },
+            { "text": "}", "indent": 0 }
+          ],
+          "explain": "Include first, then `main` opens with `{`, the instructions go inside (indented), and `}` closes it."
+        }
+      ]
+    },
+    {
+      "id": "m0-l2",
+      "title": "New lines and other escapes",
+      "concept": "Some characters can't be typed straight into quotes, so C uses **escapes**: a backslash plus a letter.\n\n`\\n` new line · `\\t` tab · `\\\"` a quote mark · `\\\\` a backslash.\n\nWithout `\\n`, printf keeps writing on the same line. It never adds a new line for you.",
+      "example": {
+        "source": "#include <stdio.h>\n\nint main(void) {\n    printf(\"Line one\\nLine two\\n\");\n    printf(\"She said \\\"reboot\\\"\\n\");\n    return 0;\n}\n"
+      },
+      "predict": {
+        "id": "m0-p2",
+        "kind": "predict",
+        "prompt": "Before you run it: type what this prints.",
+        "code": "#include <stdio.h>\n\nint main(void) {\n    printf(\"Line one\\nLine two\\n\");\n    printf(\"She said \\\"reboot\\\"\\n\");\n    return 0;\n}\n",
+        "answer": "Line one\nLine two\nShe said \"reboot\"\n",
+        "explain": "A `\\n` in the middle of the text breaks the line right there. `\\\"` prints a real quote mark."
+      },
+      "drills": [
+        {
+          "id": "m0-d4",
+          "kind": "predict",
+          "prompt": "What does this print?",
+          "code": "printf(\"1\\n2\");\nprintf(\"3\\n\");",
+          "options": ["1\n23", "123", "1\n2\n3", "1 23"],
+          "answer": "1\n23",
+          "explain": "There's a new line after `1`, but none after `2`, so the `3` lands right next to it."
+        },
+        {
+          "id": "m0-d5",
+          "kind": "fill",
+          "prompt": "Put a tab between `Name:` and `SIGMA`.",
+          "code": "printf(\"Name:___SIGMA\\n\");",
+          "blanks": [["\\t"]],
+          "explain": "`\\t` is a tab: a jump to the next column, handy for lining up readouts."
+        },
+        {
+          "id": "m0-d6",
+          "kind": "fix",
+          "prompt": "This should print `Hull: \"OK\"` (with the quote marks) but it won't compile. Fix it.",
+          "code": "#include <stdio.h>\n\nint main(void) {\n    printf(\"Hull: \"OK\"\\n\");\n    return 0;\n}\n",
+          "tests": [{ "stdin": "", "expected": "Hull: \"OK\"\n", "visible": true }],
+          "solution": "#include <stdio.h>\n\nint main(void) {\n    printf(\"Hull: \\\"OK\\\"\\n\");\n    return 0;\n}\n",
+          "explain": "A plain `\"` ends the text early. Inside quotes, write `\\\"` to print a quote mark."
+        }
+      ]
+    },
+    {
+      "id": "m0-l3",
+      "title": "Comments and mistakes",
+      "concept": "**Comments** are notes for humans. The compiler skips them.\n\n`//` hides the rest of a line. `/* ... */` hides everything between, even several lines.\n\nWhen something won't compile, read the **first** error only. Its line number points at the problem, or the line just after it. A missing `;` is the most common one.",
+      "example": {
+        "source": "#include <stdio.h>\n\nint main(void) {\n    // SIGMA: this line is just a note\n    printf(\"Fuel check\\n\");\n    /* printf(\"Old test\\n\"); */\n    return 0;\n}\n"
+      },
+      "predict": {
+        "id": "m0-p3",
+        "kind": "predict",
+        "prompt": "Before you run it: how many lines does this print?",
+        "code": "#include <stdio.h>\n\nint main(void) {\n    // SIGMA: this line is just a note\n    printf(\"Fuel check\\n\");\n    /* printf(\"Old test\\n\"); */\n    return 0;\n}\n",
+        "options": ["1", "2", "3", "0"],
+        "answer": "1",
+        "explain": "Only `Fuel check` prints. The note and the old test are comments, so they never run."
+      },
+      "drills": [
+        {
+          "id": "m0-d7",
+          "kind": "predict",
+          "prompt": "Type exactly what this prints.",
+          "code": "// printf(\"A\\n\");\nprintf(\"B\\n\");\n/* printf(\"C\\n\"); */\nprintf(\"D\\n\");",
+          "answer": "B\nD\n",
+          "explain": "`A` and `C` are inside comments. Only `B` and `D` run."
+        },
+        {
+          "id": "m0-d8",
+          "kind": "fix",
+          "prompt": "It should print `Engines: online`. Read the compiler's complaint, then fix it.",
+          "code": "#include <stdio.h>\n\nint main(void) {\n    printf(\"Engines: online\\n\")\n    return 0;\n}\n",
+          "tests": [{ "stdin": "", "expected": "Engines: online\n", "visible": true }],
+          "solution": "#include <stdio.h>\n\nint main(void) {\n    printf(\"Engines: online\\n\");\n    return 0;\n}\n",
+          "explain": "Every statement ends with `;`. The compiler noticed when it reached `return` on the next line."
+        },
+        {
+          "id": "m0-d9",
+          "kind": "write",
+          "prompt": "Write a program that prints `KERNEL-7` on one line and `READY` on the next.",
+          "code": "#include <stdio.h>\n\nint main(void) {\n    \n    return 0;\n}\n",
+          "tests": [{ "stdin": "", "expected": "KERNEL-7\nREADY\n", "visible": true }],
+          "solution": "#include <stdio.h>\n\nint main(void) {\n    printf(\"KERNEL-7\\n\");\n    printf(\"READY\\n\");\n    return 0;\n}\n",
+          "explain": "Two printfs, each ending with `\\n`. One printf with `\"KERNEL-7\\nREADY\\n\"` works too."
+        }
+      ]
+    }
+  ],
+  "checkpoint": [
+    {
+      "id": "m0-cp1",
+      "kind": "predict",
+      "prompt": "In `printf(\"X\\tY\\n\");`, what ends up between X and Y?",
+      "code": "printf(\"X\\tY\\n\");",
+      "options": ["A tab", "A new line", "The letter t", "Nothing"],
+      "answer": "A tab",
+      "explain": "`\\t` is the tab escape."
+    },
+    {
+      "id": "m0-cp2",
+      "kind": "fill",
+      "prompt": "Which function prints text?",
+      "code": "___(\"Ready\\n\");",
+      "blanks": [["printf"]],
+      "explain": "`printf` prints; the `f` stands for formatted."
+    },
+    {
+      "id": "m0-cp3",
+      "kind": "predict",
+      "prompt": "Type exactly what this prints.",
+      "code": "printf(\"Hi\");\nprintf(\"\\n\");\nprintf(\"Bye\\n\");",
+      "answer": "Hi\nBye\n",
+      "explain": "The middle printf prints only a new line."
+    },
+    {
+      "id": "m0-cp4",
+      "kind": "parsons",
+      "prompt": "Order the lines into a working program.",
+      "lines": [
+        { "text": "#include <stdio.h>", "indent": 0 },
+        { "text": "int main(void) {", "indent": 0 },
+        { "text": "printf(\"ok\\n\");", "indent": 1 },
+        { "text": "return 0;", "indent": 1 },
+        { "text": "}", "indent": 0 }
+      ],
+      "explain": "Include, open `main`, instructions inside, close."
+    },
+    {
+      "id": "m0-cp5",
+      "kind": "predict",
+      "prompt": "This won't compile. Which line is the problem?",
+      "code": "printf(\"one\\n\");\nprintf(\"two\\n\")\nprintf(\"three\\n\");",
+      "options": ["Line 1", "Line 2", "Line 3"],
+      "answer": "Line 2",
+      "explain": "Line 2 is missing its `;`. The compiler may report line 3, because that's where it noticed."
+    }
+  ]
+}

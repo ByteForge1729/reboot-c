@@ -1,0 +1,25 @@
+{
+  "id": "m3-b3",
+  "title": "Access Code Validator",
+  "difficulty": "hard",
+  "story": "The security core accepts 4-digit access codes, but it's fussy. Check the rules **in this order** and stop at the first one that fails:\n\n1. Not between 1000 and 9999 → `DENIED: length`\n2. First digit equals last digit → `DENIED: mirror`\n3. The two middle digits add up to 9 or less → `DENIED: weak`\n4. Otherwise → `GRANTED`\n\nInput: one whole number `N` (could be anything from -100000 to 100000).\n\nExample: `4581` prints `GRANTED`: 4 ≠ 1, and 5 + 8 = 13.",
+  "starter": "#include <stdio.h>\n\nint main(void) {\n    int code;\n    scanf(\"%d\", &code);\n    // check the rules in order\n    return 0;\n}\n",
+  "tests": [
+    { "stdin": "4581\n", "expected": "GRANTED\n", "visible": true },
+    { "stdin": "4564\n", "expected": "DENIED: mirror\n", "visible": true },
+    { "stdin": "1230\n", "expected": "DENIED: weak\n", "visible": true },
+    { "stdin": "999\n", "expected": "DENIED: length\n", "visible": false },
+    { "stdin": "10000\n", "expected": "DENIED: length\n", "visible": false },
+    { "stdin": "-1234\n", "expected": "DENIED: length\n", "visible": false },
+    { "stdin": "1451\n", "expected": "DENIED: mirror\n", "visible": false },
+    { "stdin": "2735\n", "expected": "GRANTED\n", "visible": false },
+    { "stdin": "1009\n", "expected": "DENIED: weak\n", "visible": false },
+    { "stdin": "9999\n", "expected": "DENIED: mirror\n", "visible": false }
+  ],
+  "hints": [
+    "Pull the digits apart with `/` and `%`: the last digit is `code % 10`, the first is `code / 1000`.",
+    "The middle two: `code / 100 % 10` and `code / 10 % 10`. Only work them out after checking the length.",
+    "Use an `if / else if / else if / else` chain in the rule order, so only the first failing rule prints. `1451` must say mirror, even though its middle digits are also weak."
+  ],
+  "solution": "#include <stdio.h>\n\nint main(void) {\n    int code;\n    scanf(\"%d\", &code);\n    int first = code / 1000;\n    int second = code / 100 % 10;\n    int third = code / 10 % 10;\n    int last = code % 10;\n    if (code < 1000 || code > 9999) {\n        printf(\"DENIED: length\\n\");\n    } else if (first == last) {\n        printf(\"DENIED: mirror\\n\");\n    } else if (second + third <= 9) {\n        printf(\"DENIED: weak\\n\");\n    } else {\n        printf(\"GRANTED\\n\");\n    }\n    return 0;\n}\n"
+}

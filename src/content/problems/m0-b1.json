@@ -1,0 +1,16 @@
+{
+  "id": "m0-b1",
+  "title": "Boot Banner",
+  "difficulty": "easy",
+  "story": "The station's firmware won't start the next boot stage until it sees its banner, character for character.\n\nPrint exactly these three lines (no input):\n\n`KERNEL-7 BOOT`\n`life support: OFFLINE`\n`engineer: ONLINE`",
+  "starter": "#include <stdio.h>\n\nint main(void) {\n    printf(\"KERNEL-7 BOOT\\n\");\n    // print the other two lines\n    return 0;\n}\n",
+  "tests": [
+    { "stdin": "", "expected": "KERNEL-7 BOOT\nlife support: OFFLINE\nengineer: ONLINE\n", "visible": true }
+  ],
+  "hints": [
+    "Each line is its own printf, the same shape as the first one.",
+    "`\\n` at the end of the text inside the quotes moves to the next line.",
+    "Check capitals and the space after each colon: the firmware is picky."
+  ],
+  "solution": "#include <stdio.h>\n\nint main(void) {\n    printf(\"KERNEL-7 BOOT\\n\");\n    printf(\"life support: OFFLINE\\n\");\n    printf(\"engineer: ONLINE\\n\");\n    return 0;\n}\n"
+}

@@ -1,0 +1,23 @@
+{
+  "id": "m2-b2",
+  "title": "Mission Clock",
+  "difficulty": "medium",
+  "story": "The station's clock counts seconds since the grid came back. The crew wants a normal clock face.\n\nInput: one whole number `S`, seconds (0 ≤ S < 360000).\n\nOutput: `HH:MM:SS`, hours, minutes and seconds, each as two digits with a leading zero.\n\nExample: `3725` prints `01:02:05`.",
+  "starter": "#include <stdio.h>\n\nint main(void) {\n    int seconds;\n    scanf(\"%d\", &seconds);\n    // split into hours, minutes, seconds\n    return 0;\n}\n",
+  "tests": [
+    { "stdin": "3725\n", "expected": "01:02:05\n", "visible": true },
+    { "stdin": "0\n", "expected": "00:00:00\n", "visible": true },
+    { "stdin": "86399\n", "expected": "23:59:59\n", "visible": true },
+    { "stdin": "59\n", "expected": "00:00:59\n", "visible": false },
+    { "stdin": "3600\n", "expected": "01:00:00\n", "visible": false },
+    { "stdin": "359999\n", "expected": "99:59:59\n", "visible": false },
+    { "stdin": "61\n", "expected": "00:01:01\n", "visible": false },
+    { "stdin": "45296\n", "expected": "12:34:56\n", "visible": false }
+  ],
+  "hints": [
+    "An hour is 3600 seconds and a minute is 60. Whole hours: `seconds / 3600`.",
+    "What's left after the hours is `seconds % 3600`. Split that into minutes and seconds the same way.",
+    "`%02d` prints a number two characters wide, padded with a zero: `printf(\"%02d:%02d:%02d\\n\", h, m, s);`"
+  ],
+  "solution": "#include <stdio.h>\n\nint main(void) {\n    int seconds;\n    scanf(\"%d\", &seconds);\n    int h = seconds / 3600;\n    int m = seconds % 3600 / 60;\n    int s = seconds % 60;\n    printf(\"%02d:%02d:%02d\\n\", h, m, s);\n    return 0;\n}\n"
+}

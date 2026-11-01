@@ -1,0 +1,23 @@
+{
+  "id": "m3-b2",
+  "title": "Docking Calendar",
+  "difficulty": "medium",
+  "story": "Supply ships only dock on schedule, and the calendar needs to know which years have 366 days.\n\nA year is a **leap year** if it divides by 4, except years that divide by 100, which are not, except years that divide by 400, which are.\n\nInput: one whole number `Y` (1–9999).\n\nOutput: `LEAP` or `COMMON`.",
+  "starter": "#include <stdio.h>\n\nint main(void) {\n    int year;\n    scanf(\"%d\", &year);\n    // LEAP or COMMON\n    return 0;\n}\n",
+  "tests": [
+    { "stdin": "2024\n", "expected": "LEAP\n", "visible": true },
+    { "stdin": "2023\n", "expected": "COMMON\n", "visible": true },
+    { "stdin": "1900\n", "expected": "COMMON\n", "visible": true },
+    { "stdin": "2000\n", "expected": "LEAP\n", "visible": false },
+    { "stdin": "2100\n", "expected": "COMMON\n", "visible": false },
+    { "stdin": "2400\n", "expected": "LEAP\n", "visible": false },
+    { "stdin": "4\n", "expected": "LEAP\n", "visible": false },
+    { "stdin": "1\n", "expected": "COMMON\n", "visible": false }
+  ],
+  "hints": [
+    "\"Divides by 4\" is `year % 4 == 0`.",
+    "Check the rarest rule first: divisible by 400 → LEAP. Then divisible by 100 → COMMON. Then divisible by 4 → LEAP. Otherwise COMMON.",
+    "Or in one line: `(year % 4 == 0 && year % 100 != 0) || year % 400 == 0`."
+  ],
+  "solution": "#include <stdio.h>\n\nint main(void) {\n    int year;\n    scanf(\"%d\", &year);\n    if ((year % 4 == 0 && year % 100 != 0) || year % 400 == 0) {\n        printf(\"LEAP\\n\");\n    } else {\n        printf(\"COMMON\\n\");\n    }\n    return 0;\n}\n"
+}

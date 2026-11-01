@@ -1,0 +1,55 @@
+{
+  "id": "m6-b3",
+  "title": "Palindrome Signal",
+  "difficulty": "hard",
+  "story": "Distress beacons repeat a call sign that reads the same forwards and backwards. Check incoming signals, **ignoring upper and lower case**.\n\nInput: one word, letters only, 1–100 characters.\n\nOutput: `YES` if it's a palindrome ignoring case, otherwise `NO`.\n\nExample: `Level` prints `YES`; `Kernel` prints `NO`.",
+  "starter": "#include <stdio.h>\n#include <string.h>\n\nint main(void) {\n    char word[101];\n    scanf(\"%100s\", word);\n    // compare from both ends\n    return 0;\n}\n",
+  "tests": [
+    {
+      "stdin": "Level\n",
+      "expected": "YES\n",
+      "visible": true
+    },
+    {
+      "stdin": "radar\n",
+      "expected": "YES\n",
+      "visible": true
+    },
+    {
+      "stdin": "Kernel\n",
+      "expected": "NO\n",
+      "visible": true
+    },
+    {
+      "stdin": "a\n",
+      "expected": "YES\n",
+      "visible": false
+    },
+    {
+      "stdin": "Ab\n",
+      "expected": "NO\n",
+      "visible": false
+    },
+    {
+      "stdin": "AbBa\n",
+      "expected": "YES\n",
+      "visible": false
+    },
+    {
+      "stdin": "Racecar\n",
+      "expected": "YES\n",
+      "visible": false
+    },
+    {
+      "stdin": "abca\n",
+      "expected": "NO\n",
+      "visible": false
+    }
+  ],
+  "hints": [
+    "Compare the first and last letters, then the second and second-to-last, moving inwards.",
+    "`'L'` and `'l'` are different chars. `tolower(c)` from `<ctype.h>` turns a letter lowercase.",
+    "Two indexes: `i = 0`, `j = len - 1`. While `i < j`, if `tolower(word[i]) != tolower(word[j])` it's NO; otherwise move both inwards."
+  ],
+  "solution": "#include <stdio.h>\n#include <string.h>\n#include <ctype.h>\n\nint main(void) {\n    char word[101];\n    scanf(\"%100s\", word);\n    int i = 0, j = strlen(word) - 1;\n    int same = 1;\n    while (i < j) {\n        if (tolower(word[i]) != tolower(word[j])) {\n            same = 0;\n            break;\n        }\n        i++;\n        j--;\n    }\n    printf(\"%s\\n\", same ? \"YES\" : \"NO\");\n    return 0;\n}\n"
+}

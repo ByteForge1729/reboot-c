@@ -1,0 +1,371 @@
+{
+ "missionId": 10,
+ "cheatsheet": "**Declaring**\n`int sum_all(int count, ...)`: at least one named parameter before `...`\n\n**Reading the extras** (`<stdarg.h>`)\n`va_list args; va_start(args, count);` · `va_arg(args, int)` each time · `va_end(args);`\n\n**Knowing when to stop**\nA count in front, or a sentinel at the end (`NULL` for strings).\n\n**Promotions**\n`char`/`short` arrive as `int`, `float` arrives as `double`.\n\n**Passing them on**\n`vprintf(fmt, args)` · macros: `#define LOG(fmt, ...) printf(fmt, __VA_ARGS__)`",
+ "lessons": [
+  {
+   "id": "m10-l1",
+   "title": "Functions that take any number of arguments",
+   "concept": "printf takes one argument or ten. You can write functions like that too: the `...` in `int sum_all(int count, ...)` means *more arguments may follow*.\n\nTo read them, include `<stdarg.h>`: make a `va_list`, start it after the last named parameter with `va_start(args, count)`, take each one with `va_arg(args, int)`, and finish with `va_end(args)`.\n\nThe catch: C doesn't record how many arguments came, or their types. The function has to be told, here by the `count` in front.",
+   "example": {
+    "source": "#include <stdio.h>\n#include <stdarg.h>\n\nint sum_all(int count, ...) {\n    va_list args;\n    va_start(args, count);\n    int total = 0;\n    for (int i = 0; i < count; i++) total += va_arg(args, int);\n    va_end(args);\n    return total;\n}\n\nint main(void) {\n    printf(\"%d\\n\", sum_all(3, 10, 20, 30));\n    printf(\"%d\\n\", sum_all(1, 7));\n    printf(\"%d\\n\", sum_all(0));\n    return 0;\n}\n",
+    "stdin": ""
+   },
+   "predict": {
+    "id": "m10-p1",
+    "kind": "predict",
+    "prompt": "Before you run it: type what it prints.",
+    "code": "#include <stdio.h>\n#include <stdarg.h>\n\nint sum_all(int count, ...) {\n    va_list args;\n    va_start(args, count);\n    int total = 0;\n    for (int i = 0; i < count; i++) total += va_arg(args, int);\n    va_end(args);\n    return total;\n}\n\nint main(void) {\n    printf(\"%d\\n\", sum_all(3, 10, 20, 30));\n    printf(\"%d\\n\", sum_all(1, 7));\n    printf(\"%d\\n\", sum_all(0));\n    return 0;\n}\n",
+    "answer": "60\n7\n0\n",
+    "explain": "The first argument says how many follow. With a count of 0 the loop never runs.",
+    "warmupEligible": false
+   },
+   "drills": [
+    {
+     "id": "m10-d1",
+     "kind": "predict",
+     "prompt": "How does `sum_all` know how many numbers it was given?",
+     "code": "sum_all(3, 10, 20, 30)",
+     "options": [
+      "You tell it: the first argument is the count",
+      "va_list counts them for you",
+      "C passes the number of arguments secretly",
+      "It stops when it reads a 0"
+     ],
+     "answer": "You tell it: the first argument is the count",
+     "explain": "Nothing in C tracks variadic arguments. Get the count wrong and va_arg reads past the end."
+    },
+    {
+     "id": "m10-d2",
+     "kind": "fill",
+     "prompt": "Fill the blanks to finish `sum_all`.",
+     "code": "int sum_all(int count, ...) {\n    va_list args;\n    va_start(args, ___);\n    int total = 0;\n    for (int i = 0; i < count; i++) total += va_arg(args, ___);\n    ___(args);\n    return total;\n}",
+     "blanks": [
+      [
+       "count"
+      ],
+      [
+       "int"
+      ],
+      [
+       "va_end"
+      ]
+     ],
+     "explain": "va_start needs the last named parameter, va_arg needs the type you expect, and va_end tidies up."
+    },
+    {
+     "id": "m10-d3",
+     "kind": "predict",
+     "prompt": "Type what this prints.",
+     "code": "#include <stdio.h>\n#include <stdarg.h>\n\nint max_of(int count, ...) {\n    va_list args;\n    va_start(args, count);\n    int best = va_arg(args, int);\n    for (int i = 1; i < count; i++) {\n        int v = va_arg(args, int);\n        if (v > best) best = v;\n    }\n    va_end(args);\n    return best;\n}\n\nint main(void) {\n    printf(\"%d %d\\n\", max_of(4, 3, 9, 2, 5), max_of(2, -8, -3));\n    return 0;\n}\n",
+     "answer": "9 -3\n",
+     "explain": "The count isn't one of the values: max_of(4, ...) looks at 3, 9, 2 and 5."
+    },
+    {
+     "id": "m10-d4",
+     "kind": "write",
+     "prompt": "Finish `double average(int count, ...)`: the arguments are doubles, so take each with `va_arg(args, double)`. `main` is done.",
+     "code": "#include <stdio.h>\n#include <stdarg.h>\n\ndouble average(int count, ...) {\n    // va_list, va_start, va_arg(args, double), va_end\n    return 0;\n}\n\nint main(void) {\n    double a, b, c;\n    scanf(\"%lf %lf %lf\", &a, &b, &c);\n    printf(\"%.2f\\n\", average(3, a, b, c));\n    printf(\"%.2f\\n\", average(2, a, b));\n    printf(\"%.2f\\n\", average(1, c));\n    return 0;\n}\n",
+     "tests": [
+      {
+       "stdin": "1 2 3\n",
+       "expected": "2.00\n1.50\n3.00\n",
+       "visible": true
+      },
+      {
+       "stdin": "10 20 0.5\n",
+       "expected": "10.17\n15.00\n0.50\n",
+       "visible": true
+      },
+      {
+       "stdin": "-4 4 -1\n",
+       "expected": "-0.33\n0.00\n-1.00\n",
+       "visible": false
+      },
+      {
+       "stdin": "2.5 2.5 2.5\n",
+       "expected": "2.50\n2.50\n2.50\n",
+       "visible": false
+      }
+     ],
+     "solution": "#include <stdio.h>\n#include <stdarg.h>\n\ndouble average(int count, ...) {\n    va_list args;\n    va_start(args, count);\n    double total = 0;\n    for (int i = 0; i < count; i++) total += va_arg(args, double);\n    va_end(args);\n    return total / count;\n}\n\nint main(void) {\n    double a, b, c;\n    scanf(\"%lf %lf %lf\", &a, &b, &c);\n    printf(\"%.2f\\n\", average(3, a, b, c));\n    printf(\"%.2f\\n\", average(2, a, b));\n    printf(\"%.2f\\n\", average(1, c));\n    return 0;\n}\n",
+     "explain": "Same pattern as sum_all, with `double` as the type and a division at the end."
+    }
+   ]
+  },
+  {
+   "id": "m10-l2",
+   "title": "Sentinels, and what really gets passed",
+   "concept": "Instead of a count, the caller can mark the end with a special last value, a **sentinel**. For strings that's usually `NULL`: `shout(\"red\", \"alert\", NULL);`. Forget it, and the function reads garbage.\n\nArguments in the `...` part get **promoted**: `char` and `short` arrive as `int`, and `float` arrives as `double`. So `va_arg(args, float)` is always wrong; ask for `double`.\n\nEven printf works like this: `%f` reads a double, whether you passed a float or a double.",
+   "example": {
+    "source": "#include <stdio.h>\n#include <stdarg.h>\n\nvoid shout(const char *first, ...) {\n    va_list args;\n    va_start(args, first);\n    const char *sep = \"\";\n    for (const char *w = first; w != NULL; w = va_arg(args, const char *)) {\n        printf(\"%s%s!\", sep, w);\n        sep = \" \";\n    }\n    va_end(args);\n    printf(\"\\n\");\n}\n\nint main(void) {\n    shout(\"red\", \"alert\", NULL);\n    shout(\"mayday\", NULL);\n    return 0;\n}\n",
+    "stdin": ""
+   },
+   "predict": {
+    "id": "m10-p2",
+    "kind": "predict",
+    "prompt": "Before you run it: type what it prints.",
+    "code": "#include <stdio.h>\n#include <stdarg.h>\n\nvoid shout(const char *first, ...) {\n    va_list args;\n    va_start(args, first);\n    const char *sep = \"\";\n    for (const char *w = first; w != NULL; w = va_arg(args, const char *)) {\n        printf(\"%s%s!\", sep, w);\n        sep = \" \";\n    }\n    va_end(args);\n    printf(\"\\n\");\n}\n\nint main(void) {\n    shout(\"red\", \"alert\", NULL);\n    shout(\"mayday\", NULL);\n    return 0;\n}\n",
+    "answer": "red! alert!\nmayday!\n",
+    "explain": "Each call walks its words until it meets the NULL. The separator is empty before the first word and a space after that.",
+    "warmupEligible": false
+   },
+   "drills": [
+    {
+     "id": "m10-d5",
+     "kind": "predict",
+     "prompt": "A `float` and a `char` are passed through `...`. What should va_arg ask for?",
+     "code": "report(2, 1.5f, 'x');",
+     "options": [
+      "`double` and `int`",
+      "`float` and `char`",
+      "`int` for both",
+      "`double` for both"
+     ],
+     "answer": "`double` and `int`",
+     "explain": "Promotions: float becomes double, char and short become int."
+    },
+    {
+     "id": "m10-d6",
+     "kind": "fix",
+     "prompt": "`biggest` should return the largest of its arguments, but the program dies the moment it runs. Read the compiler's warning, then fix it.",
+     "code": "#include <stdio.h>\n#include <stdarg.h>\n\ndouble biggest(int count, ...) {\n    va_list args;\n    va_start(args, count);\n    double best = va_arg(args, float);\n    for (int i = 1; i < count; i++) {\n        double v = va_arg(args, float);\n        if (v > best) best = v;\n    }\n    va_end(args);\n    return best;\n}\n\nint main(void) {\n    float a, b, c;\n    scanf(\"%f %f %f\", &a, &b, &c);\n    printf(\"%.1f\\n\", biggest(3, a, b, c));\n    printf(\"%.1f\\n\", biggest(2, b, c));\n    return 0;\n}\n",
+     "tests": [
+      {
+       "stdin": "1.5 2.5 0.5\n",
+       "expected": "2.5\n2.5\n",
+       "visible": true
+      },
+      {
+       "stdin": "-1 -2 -3\n",
+       "expected": "-1.0\n-2.0\n",
+       "visible": true
+      },
+      {
+       "stdin": "3 9 4\n",
+       "expected": "9.0\n9.0\n",
+       "visible": false
+      },
+      {
+       "stdin": "0.2 0.7 0.4\n",
+       "expected": "0.7\n0.7\n",
+       "visible": false
+      }
+     ],
+     "solution": "#include <stdio.h>\n#include <stdarg.h>\n\ndouble biggest(int count, ...) {\n    va_list args;\n    va_start(args, count);\n    double best = va_arg(args, double);\n    for (int i = 1; i < count; i++) {\n        double v = va_arg(args, double);\n        if (v > best) best = v;\n    }\n    va_end(args);\n    return best;\n}\n\nint main(void) {\n    float a, b, c;\n    scanf(\"%f %f %f\", &a, &b, &c);\n    printf(\"%.1f\\n\", biggest(3, a, b, c));\n    printf(\"%.1f\\n\", biggest(2, b, c));\n    return 0;\n}\n",
+     "explain": "The floats were promoted to double on the way in, so `va_arg(args, float)` is undefined. gcc even warns *float is promoted to double* and plants a crash there. Ask for `double`."
+    },
+    {
+     "id": "m10-d7",
+     "kind": "write",
+     "prompt": "Finish `int count_long(int min_len, ...)`: the words that follow end with a `NULL`. Return how many have **at least** `min_len` letters. `main` is done.",
+     "code": "#include <stdio.h>\n#include <stdarg.h>\n#include <string.h>\n\nint count_long(int min_len, ...) {\n    // walk the words until NULL\n    return 0;\n}\n\nint main(void) {\n    int min_len;\n    char w1[32], w2[32], w3[32];\n    scanf(\"%d %31s %31s %31s\", &min_len, w1, w2, w3);\n    printf(\"%d\\n\", count_long(min_len, w1, w2, w3, NULL));\n    printf(\"%d\\n\", count_long(min_len, w2, NULL));\n    printf(\"%d\\n\", count_long(min_len, NULL));\n    return 0;\n}\n",
+     "tests": [
+      {
+       "stdin": "4 red alert mayday\n",
+       "expected": "2\n1\n0\n",
+       "visible": true
+      },
+      {
+       "stdin": "1 a bb ccc\n",
+       "expected": "3\n1\n0\n",
+       "visible": true
+      },
+      {
+       "stdin": "10 short tiny small\n",
+       "expected": "0\n0\n0\n",
+       "visible": false
+      },
+      {
+       "stdin": "5 hello world again\n",
+       "expected": "3\n1\n0\n",
+       "visible": false
+      }
+     ],
+     "solution": "#include <stdio.h>\n#include <stdarg.h>\n#include <string.h>\n\nint count_long(int min_len, ...) {\n    va_list args;\n    va_start(args, min_len);\n    int count = 0;\n    for (const char *w = va_arg(args, const char *); w != NULL; w = va_arg(args, const char *)) {\n        if ((int)strlen(w) >= min_len) count++;\n    }\n    va_end(args);\n    return count;\n}\n\nint main(void) {\n    int min_len;\n    char w1[32], w2[32], w3[32];\n    scanf(\"%d %31s %31s %31s\", &min_len, w1, w2, w3);\n    printf(\"%d\\n\", count_long(min_len, w1, w2, w3, NULL));\n    printf(\"%d\\n\", count_long(min_len, w2, NULL));\n    printf(\"%d\\n\", count_long(min_len, NULL));\n    return 0;\n}\n",
+     "explain": "Here the named parameter isn't a word, so take the first word with va_arg too, then keep going until NULL."
+    }
+   ]
+  },
+  {
+   "id": "m10-l3",
+   "title": "Build your own printf",
+   "concept": "A format string is a little program: ordinary characters are printed as they are, and each `%` says *take the next argument and print it like this*. That's exactly how printf decides what va_arg type to ask for.\n\nWhen you want to wrap printf, pass your `va_list` to **vprintf**: `vprintf(fmt, args)` is printf for arguments you've already started reading.\n\nMacros can be variadic too: `#define LOG(fmt, ...) printf(fmt, __VA_ARGS__)` pastes the extra arguments where `__VA_ARGS__` is.",
+   "example": {
+    "source": "#include <stdio.h>\n#include <stdarg.h>\n\nvoid log_msg(const char *level, const char *fmt, ...) {\n    va_list args;\n    va_start(args, fmt);\n    printf(\"[%s] \", level);\n    vprintf(fmt, args);\n    printf(\"\\n\");\n    va_end(args);\n}\n\nint main(void) {\n    log_msg(\"WARN\", \"hull at %d%%\", 87);\n    log_msg(\"INFO\", \"%s docked in bay %d\", \"Kestrel\", 4);\n    return 0;\n}\n",
+    "stdin": ""
+   },
+   "predict": {
+    "id": "m10-p3",
+    "kind": "predict",
+    "prompt": "Before you run it: type what it prints.",
+    "code": "#include <stdio.h>\n#include <stdarg.h>\n\nvoid log_msg(const char *level, const char *fmt, ...) {\n    va_list args;\n    va_start(args, fmt);\n    printf(\"[%s] \", level);\n    vprintf(fmt, args);\n    printf(\"\\n\");\n    va_end(args);\n}\n\nint main(void) {\n    log_msg(\"WARN\", \"hull at %d%%\", 87);\n    log_msg(\"INFO\", \"%s docked in bay %d\", \"Kestrel\", 4);\n    return 0;\n}\n",
+    "answer": "[WARN] hull at 87%\n[INFO] Kestrel docked in bay 4\n",
+    "explain": "log_msg prints the level, then hands the format and the rest of the arguments to vprintf. `%%` prints a single %.",
+    "warmupEligible": false
+   },
+   "drills": [
+    {
+     "id": "m10-d8",
+     "kind": "predict",
+     "prompt": "Type what this prints.",
+     "code": "#define LOG(fmt, ...) printf(\"[log] \" fmt \"\\n\", __VA_ARGS__)\nLOG(\"x=%d y=%d\", 5, 7);",
+     "answer": "[log] x=5 y=7\n",
+     "explain": "Strings side by side are glued together, so the format becomes `\"[log] x=%d y=%d\\n\"`, and `__VA_ARGS__` becomes `5, 7`."
+    },
+    {
+     "id": "m10-d9",
+     "kind": "predict",
+     "prompt": "Why does log_msg call `vprintf(fmt, args)` instead of `printf(fmt, args)`?",
+     "code": "vprintf(fmt, args);",
+     "options": [
+      "printf wants the actual arguments; vprintf takes a va_list you've already started",
+      "vprintf is faster",
+      "printf can't print to stdout from inside a function",
+      "vprintf adds the newline"
+     ],
+     "answer": "printf wants the actual arguments; vprintf takes a va_list you've already started",
+     "explain": "Passing a va_list to printf would print the va_list itself as if it were the first argument: garbage."
+    },
+    {
+     "id": "m10-d10",
+     "kind": "parsons",
+     "prompt": "Order and indent the loop at the heart of a mini printf (it handles `%d`, `%s`, and prints anything else as it is).",
+     "lines": [
+      {
+       "text": "for (const char *p = fmt; *p != '\\0'; p++) {",
+       "indent": 0
+      },
+      {
+       "text": "if (*p != '%') {",
+       "indent": 1
+      },
+      {
+       "text": "putchar(*p);",
+       "indent": 2
+      },
+      {
+       "text": "continue;",
+       "indent": 2
+      },
+      {
+       "text": "}",
+       "indent": 1
+      },
+      {
+       "text": "p++;",
+       "indent": 1
+      },
+      {
+       "text": "if (*p == 'd') printf(\"%d\", va_arg(args, int));",
+       "indent": 1
+      },
+      {
+       "text": "else if (*p == 's') fputs(va_arg(args, const char *), stdout);",
+       "indent": 1
+      },
+      {
+       "text": "else putchar(*p);",
+       "indent": 1
+      },
+      {
+       "text": "}",
+       "indent": 0
+      }
+     ],
+     "explain": "Plain characters go straight out. On a `%`, step to the letter after it and print the next argument the way that letter says."
+    },
+    {
+     "id": "m10-d11",
+     "kind": "write",
+     "prompt": "Write `void mini_print(const char *fmt, ...)` that understands `%d` (int), `%s` (string), `%c` (char) and `%%`, and prints every other character as it is. Using printf just for the `%d` part is fine. `main` is done.",
+     "code": "#include <stdio.h>\n#include <stdarg.h>\n\nvoid mini_print(const char *fmt, ...) {\n    // walk fmt one character at a time\n}\n\nint main(void) {\n    char name[32];\n    int n;\n    scanf(\"%31s %d\", name, &n);\n    mini_print(\"Crew %s has %d drones%c\\n\", name, n, '!');\n    mini_print(\"100%% ready\\n\");\n    return 0;\n}\n",
+     "tests": [
+      {
+       "stdin": "Asha 3\n",
+       "expected": "Crew Asha has 3 drones!\n100% ready\n",
+       "visible": true
+      },
+      {
+       "stdin": "Ravi 0\n",
+       "expected": "Crew Ravi has 0 drones!\n100% ready\n",
+       "visible": true
+      },
+      {
+       "stdin": "Zo -2\n",
+       "expected": "Crew Zo has -2 drones!\n100% ready\n",
+       "visible": false
+      }
+     ],
+     "solution": "#include <stdio.h>\n#include <stdarg.h>\n\nvoid mini_print(const char *fmt, ...) {\n    va_list args;\n    va_start(args, fmt);\n    for (const char *p = fmt; *p != '\\0'; p++) {\n        if (*p != '%') {\n            putchar(*p);\n            continue;\n        }\n        p++;\n        if (*p == 'd') printf(\"%d\", va_arg(args, int));\n        else if (*p == 's') fputs(va_arg(args, const char *), stdout);\n        else if (*p == 'c') putchar(va_arg(args, int));\n        else putchar(*p);\n    }\n    va_end(args);\n}\n\nint main(void) {\n    char name[32];\n    int n;\n    scanf(\"%31s %d\", name, &n);\n    mini_print(\"Crew %s has %d drones%c\\n\", name, n, '!');\n    mini_print(\"100%% ready\\n\");\n    return 0;\n}\n",
+     "explain": "`%c` takes an `int` (char is promoted), and `%%` falls into the last case, which prints the `%` itself."
+    }
+   ]
+  }
+ ],
+ "checkpoint": [
+  {
+   "id": "m10-cp1",
+   "kind": "predict",
+   "prompt": "Which header gives you va_list, va_start, va_arg and va_end?",
+   "code": "#include <___>",
+   "options": [
+    "stdarg.h",
+    "stdio.h",
+    "stdlib.h",
+    "varargs.c"
+   ],
+   "answer": "stdarg.h",
+   "explain": "`<stdarg.h>`: standard arguments."
+  },
+  {
+   "id": "m10-cp2",
+   "kind": "predict",
+   "prompt": "The caller passed `2.5`, but the function does `va_arg(args, int)`. What do you get?",
+   "code": "va_arg(args, int)",
+   "options": [
+    "Garbage: va_arg trusts you about the type",
+    "2",
+    "3",
+    "A compile error"
+   ],
+   "answer": "Garbage: va_arg trusts you about the type",
+   "explain": "Nothing checks the type at run time. That's why printf's `%d` with a double prints nonsense."
+  },
+  {
+   "id": "m10-cp3",
+   "kind": "predict",
+   "prompt": "Type what this prints.",
+   "code": "#include <stdio.h>\n#include <stdarg.h>\n\nint add_until(int first, ...) {\n    va_list args;\n    va_start(args, first);\n    int total = 0;\n    for (int v = first; v != -1; v = va_arg(args, int)) total += v;\n    va_end(args);\n    return total;\n}\n\nint main(void) {\n    printf(\"%d %d\\n\", add_until(4, 5, 6, -1), add_until(-1));\n    return 0;\n}\n",
+   "answer": "15 0\n",
+   "explain": "-1 is the sentinel. In the second call it's the very first value, so nothing is added."
+  },
+  {
+   "id": "m10-cp4",
+   "kind": "predict",
+   "prompt": "What has to come before the `...` in a variadic function?",
+   "code": "int f(___, ...)",
+   "options": [
+    "At least one named parameter, because va_start needs it",
+    "Nothing",
+    "Exactly two parameters",
+    "A va_list parameter"
+   ],
+   "answer": "At least one named parameter, because va_start needs it",
+   "explain": "`va_start(args, last_named)` finds the extras by starting after the last named parameter."
+  },
+  {
+   "id": "m10-cp5",
+   "kind": "predict",
+   "prompt": "What's wrong with this?",
+   "code": "printf(\"%d %d\\n\", 5);",
+   "options": [
+    "The second %d reads an argument that was never passed",
+    "Nothing, the second %d prints 0",
+    "printf needs a count first",
+    "%d can't be used twice"
+   ],
+   "answer": "The second %d reads an argument that was never passed",
+   "explain": "printf trusts its format string just like your own variadic functions do."
+  }
+ ]
+}

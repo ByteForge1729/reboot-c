@@ -1,0 +1,225 @@
+{
+  "missionId": 3,
+  "cheatsheet": "**if / else**\n`if (cond) { ... } else { ... }` · comparisons `== != < > <= >=` · true is `1`, false is `0`\n\n**The classic bug**\n`if (x = 5)` assigns. Compare with `==`.\n\n**Combine**\n`&&` and · `||` or · `!` not\n\n**Chains**\n`if ... else if ... else`: only the first true branch runs, top to bottom.\n\n**switch**\n`switch (v) { case 1: ...; break; default: ...; }`. Without `break`, it falls into the next case.\n\n**?:**\n`cond ? a : b` is a tiny if/else that gives a value.",
+  "lessons": [
+    {
+      "id": "m3-l1",
+      "title": "Making decisions",
+      "concept": "`if (condition) { ... }` runs the block only when the condition is true. `else { ... }` runs otherwise.\n\nComparisons: `==` equal (two signs), `!=` not equal, `<`, `>`, `<=`, `>=`. In C a comparison is a number: true is `1`, false is `0`.\n\nThe classic bug: `if (x = 5)` **assigns** 5 to x instead of comparing, and counts as true. Comparing is always `==`.",
+      "example": {
+        "source": "#include <stdio.h>\n\nint main(void) {\n    int pressure;\n    scanf(\"%d\", &pressure);\n    if (pressure >= 95) {\n        printf(\"Airlock: OPEN\\n\");\n    } else {\n        printf(\"Airlock: HOLD\\n\");\n    }\n    printf(\"Pressure was %d\\n\", pressure);\n    return 0;\n}\n",
+        "stdin": "101\n"
+      },
+      "predict": {
+        "id": "m3-p1",
+        "kind": "predict",
+        "prompt": "The sensor reads `101`. Before you run it: what does it print?",
+        "code": "#include <stdio.h>\n\nint main(void) {\n    int pressure;\n    scanf(\"%d\", &pressure);\n    if (pressure >= 95) {\n        printf(\"Airlock: OPEN\\n\");\n    } else {\n        printf(\"Airlock: HOLD\\n\");\n    }\n    printf(\"Pressure was %d\\n\", pressure);\n    return 0;\n}\n",
+        "answer": "Airlock: OPEN\nPressure was 101\n",
+        "explain": "101 ≥ 95, so the `if` block runs and the `else` is skipped. The last printf is outside both, so it always runs.",
+        "warmupEligible": false
+      },
+      "drills": [
+        {
+          "id": "m3-d1",
+          "kind": "predict",
+          "prompt": "What does this print?",
+          "code": "int x = 3;\nif (x > 5) {\n    printf(\"big\\n\");\n} else {\n    printf(\"small\\n\");\n}",
+          "options": ["small", "big", "big\nsmall", "Nothing"],
+          "answer": "small",
+          "explain": "3 > 5 is false, so only the `else` runs."
+        },
+        {
+          "id": "m3-d2",
+          "kind": "predict",
+          "prompt": "Type exactly what this prints.",
+          "code": "printf(\"%d %d\\n\", 4 == 4, 3 > 7);",
+          "answer": "1 0\n",
+          "explain": "A true comparison is 1, a false one is 0."
+        },
+        {
+          "id": "m3-d3",
+          "kind": "fix",
+          "prompt": "It should print `EMPTY` when the crew count is 0 and `CREWED` otherwise. It says `CREWED` even for 0. Fix it.",
+          "code": "#include <stdio.h>\n\nint main(void) {\n    int crew;\n    scanf(\"%d\", &crew);\n    if (crew = 0) {\n        printf(\"EMPTY\\n\");\n    } else {\n        printf(\"CREWED\\n\");\n    }\n    return 0;\n}\n",
+          "tests": [
+            { "stdin": "0\n", "expected": "EMPTY\n", "visible": true },
+            { "stdin": "3\n", "expected": "CREWED\n", "visible": true }
+          ],
+          "solution": "#include <stdio.h>\n\nint main(void) {\n    int crew;\n    scanf(\"%d\", &crew);\n    if (crew == 0) {\n        printf(\"EMPTY\\n\");\n    } else {\n        printf(\"CREWED\\n\");\n    }\n    return 0;\n}\n",
+          "explain": "`crew = 0` stores 0 and counts as false, every time. `crew == 0` compares."
+        },
+        {
+          "id": "m3-d4",
+          "kind": "write",
+          "prompt": "Read a whole number. Print `EVEN` if it's even, otherwise `ODD`.",
+          "code": "#include <stdio.h>\n\nint main(void) {\n    \n    return 0;\n}\n",
+          "tests": [
+            { "stdin": "4\n", "expected": "EVEN\n", "visible": true },
+            { "stdin": "7\n", "expected": "ODD\n", "visible": true },
+            { "stdin": "0\n", "expected": "EVEN\n", "visible": false },
+            { "stdin": "-3\n", "expected": "ODD\n", "visible": false }
+          ],
+          "solution": "#include <stdio.h>\n\nint main(void) {\n    int n;\n    scanf(\"%d\", &n);\n    if (n % 2 == 0) {\n        printf(\"EVEN\\n\");\n    } else {\n        printf(\"ODD\\n\");\n    }\n    return 0;\n}\n",
+          "explain": "Even means no remainder when divided by 2: `n % 2 == 0`. (For negatives `-3 % 2` is `-1`, so check for 0, not for 1.)"
+        }
+      ]
+    },
+    {
+      "id": "m3-l2",
+      "title": "Combining conditions",
+      "concept": "`&&` means AND (both must be true). `||` means OR (at least one). `!` means NOT.\n\n`else if` checks the next condition only when the ones above failed. In a chain **only one** branch runs: the first true one, top to bottom. So put the most specific checks first.",
+      "example": {
+        "source": "#include <stdio.h>\n\nint main(void) {\n    int temp;\n    scanf(\"%d\", &temp);\n    if (temp < -20 || temp > 40) {\n        printf(\"DANGER\\n\");\n    } else if (temp >= 18 && temp <= 24) {\n        printf(\"COMFY\\n\");\n    } else {\n        printf(\"OK\\n\");\n    }\n    return 0;\n}\n",
+        "stdin": "-25\n"
+      },
+      "predict": {
+        "id": "m3-p2",
+        "kind": "predict",
+        "prompt": "The cabin reads `-25`. Before you run it: what does it print?",
+        "code": "#include <stdio.h>\n\nint main(void) {\n    int temp;\n    scanf(\"%d\", &temp);\n    if (temp < -20 || temp > 40) {\n        printf(\"DANGER\\n\");\n    } else if (temp >= 18 && temp <= 24) {\n        printf(\"COMFY\\n\");\n    } else {\n        printf(\"OK\\n\");\n    }\n    return 0;\n}\n",
+        "options": ["DANGER", "COMFY", "OK", "DANGER\nOK"],
+        "answer": "DANGER",
+        "explain": "-25 < -20 makes the first `||` true, so DANGER runs and the rest of the chain is skipped.",
+        "warmupEligible": false
+      },
+      "drills": [
+        {
+          "id": "m3-d5",
+          "kind": "predict",
+          "prompt": "What does this print?",
+          "code": "int a = 5;\nif (a > 0 && a < 3) {\n    printf(\"A\\n\");\n} else if (a > 4) {\n    printf(\"B\\n\");\n} else {\n    printf(\"C\\n\");\n}",
+          "options": ["B", "A", "C", "B\nC"],
+          "answer": "B",
+          "explain": "5 < 3 is false, so the `&&` fails. 5 > 4 is true: B, and the chain stops."
+        },
+        {
+          "id": "m3-d6",
+          "kind": "predict",
+          "prompt": "Type exactly what this prints.",
+          "code": "printf(\"%d %d %d\\n\", 1 && 0, 1 || 0, !1);",
+          "answer": "0 1 0\n",
+          "explain": "AND needs both (0), OR needs one (1), NOT flips 1 to 0."
+        },
+        {
+          "id": "m3-d7",
+          "kind": "parsons",
+          "prompt": "Scores of 90 or more get `A`, 50 or more `PASS`, anything lower `FAIL`. Order the lines and indent them.",
+          "lines": [
+            { "text": "if (score >= 90) {", "indent": 0 },
+            { "text": "printf(\"A\\n\");", "indent": 1 },
+            { "text": "} else if (score >= 50) {", "indent": 0 },
+            { "text": "printf(\"PASS\\n\");", "indent": 1 },
+            { "text": "} else {", "indent": 0 },
+            { "text": "printf(\"FAIL\\n\");", "indent": 1 },
+            { "text": "}", "indent": 0 }
+          ],
+          "explain": "Highest bar first: if `>= 50` came first, a 95 would get PASS and never reach A."
+        },
+        {
+          "id": "m3-d8",
+          "kind": "write",
+          "prompt": "Read two whole numbers and print the larger one. If they're equal, print it once.",
+          "code": "#include <stdio.h>\n\nint main(void) {\n    \n    return 0;\n}\n",
+          "tests": [
+            { "stdin": "3 9\n", "expected": "9\n", "visible": true },
+            { "stdin": "9 3\n", "expected": "9\n", "visible": true },
+            { "stdin": "-2 -5\n", "expected": "-2\n", "visible": false },
+            { "stdin": "4 4\n", "expected": "4\n", "visible": false }
+          ],
+          "solution": "#include <stdio.h>\n\nint main(void) {\n    int a, b;\n    scanf(\"%d %d\", &a, &b);\n    if (a > b) {\n        printf(\"%d\\n\", a);\n    } else {\n        printf(\"%d\\n\", b);\n    }\n    return 0;\n}\n",
+          "explain": "One comparison is enough: if `a > b` print a, otherwise b (which also covers equal)."
+        }
+      ]
+    },
+    {
+      "id": "m3-l3",
+      "title": "switch and the ?: shortcut",
+      "concept": "Comparing one value against a list of exact options? `switch` is tidier than a long `else if` chain.\n\nEach `case` needs a `break`. Without it, C **falls through** and runs the next case too. `default` catches everything else.\n\n`cond ? a : b` is a tiny if/else that gives a value: `int floors = deck > 0 ? deck : 0;`",
+      "example": {
+        "source": "#include <stdio.h>\n\nint main(void) {\n    int deck;\n    scanf(\"%d\", &deck);\n    switch (deck) {\n        case 1:\n            printf(\"Bridge\\n\");\n            break;\n        case 2:\n            printf(\"Engines\\n\");\n            break;\n        default:\n            printf(\"Unknown deck\\n\");\n    }\n    int floors = deck > 0 ? deck : 0;\n    printf(\"Floors up: %d\\n\", floors);\n    return 0;\n}\n",
+        "stdin": "2\n"
+      },
+      "predict": {
+        "id": "m3-p3",
+        "kind": "predict",
+        "prompt": "The input is `2`. Before you run it: type what it prints.",
+        "code": "#include <stdio.h>\n\nint main(void) {\n    int deck;\n    scanf(\"%d\", &deck);\n    switch (deck) {\n        case 1:\n            printf(\"Bridge\\n\");\n            break;\n        case 2:\n            printf(\"Engines\\n\");\n            break;\n        default:\n            printf(\"Unknown deck\\n\");\n    }\n    int floors = deck > 0 ? deck : 0;\n    printf(\"Floors up: %d\\n\", floors);\n    return 0;\n}\n",
+        "answer": "Engines\nFloors up: 2\n",
+        "explain": "`case 2` runs and `break` leaves the switch. 2 > 0, so `?:` picks `deck`.",
+        "warmupEligible": false
+      },
+      "drills": [
+        {
+          "id": "m3-d9",
+          "kind": "predict",
+          "prompt": "Careful: one `break` is missing. Type what this prints.",
+          "code": "int c = 1;\nswitch (c) {\n    case 1:\n        printf(\"one\\n\");\n    case 2:\n        printf(\"two\\n\");\n        break;\n    case 3:\n        printf(\"three\\n\");\n}",
+          "answer": "one\ntwo\n",
+          "explain": "Case 1 has no `break`, so it falls into case 2 and stops at that `break`."
+        },
+        {
+          "id": "m3-d10",
+          "kind": "predict",
+          "prompt": "What does this print?",
+          "code": "int x = -7;\nint y = x < 0 ? -x : x;\nprintf(\"%d\\n\", y);",
+          "options": ["7", "-7", "0", "1"],
+          "answer": "7",
+          "explain": "x < 0 is true, so `?:` picks `-x`, which is 7. That's the absolute value."
+        },
+        {
+          "id": "m3-d11",
+          "kind": "fill",
+          "prompt": "Stop this case from falling through into the next one.",
+          "code": "case 3:\n    printf(\"Cargo\\n\");\n    ___;",
+          "blanks": [["break"]],
+          "explain": "`break;` leaves the switch."
+        }
+      ]
+    }
+  ],
+  "checkpoint": [
+    {
+      "id": "m3-cp1",
+      "kind": "predict",
+      "prompt": "Which condition checks whether `x` equals 5?",
+      "code": "if (___) { ... }",
+      "options": ["x == 5", "x = 5", "x === 5", "x =< 5"],
+      "answer": "x == 5",
+      "explain": "Two equals signs compare. One assigns."
+    },
+    {
+      "id": "m3-cp2",
+      "kind": "predict",
+      "prompt": "Type what this prints.",
+      "code": "int t = 30;\nif (t > 25) {\n    printf(\"hot\\n\");\n} else if (t > 10) {\n    printf(\"warm\\n\");\n} else {\n    printf(\"cold\\n\");\n}",
+      "answer": "hot\n",
+      "explain": "The first true branch wins; 30 > 10 is also true but never checked."
+    },
+    {
+      "id": "m3-cp3",
+      "kind": "predict",
+      "prompt": "What does this print?",
+      "code": "printf(\"%d\\n\", 3 > 1 && 2 > 5);",
+      "options": ["0", "1", "true", "false"],
+      "answer": "0",
+      "explain": "The second part is false, so the AND is false: 0."
+    },
+    {
+      "id": "m3-cp4",
+      "kind": "fill",
+      "prompt": "Run the block only when both `a` and `b` are positive.",
+      "code": "if (a > 0 ___ b > 0) { ... }",
+      "blanks": [["&&"]],
+      "explain": "Both must be true: `&&`."
+    },
+    {
+      "id": "m3-cp5",
+      "kind": "predict",
+      "prompt": "Type what this prints.",
+      "code": "int k = 2;\nswitch (k) {\n    case 1: printf(\"A\\n\");\n    case 2: printf(\"B\\n\");\n    case 3: printf(\"C\\n\"); break;\n    default: printf(\"D\\n\");\n}",
+      "answer": "B\nC\n",
+      "explain": "It starts at case 2, falls into case 3, and stops at the `break`."
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "id": "m11-b2",
+  "title": "Blocked Channels",
+  "difficulty": "medium",
+  "story": "Two alarm channels, USR1 and USR2, can be muted for a while without losing alarms entirely. Replay the log with **real** signals: `raise`, `sigprocmask` and `sigpending`.\n\nInput: `n` (1–200), then n commands, one per line: `raise X`, `block X` or `unblock X`, where X is `USR1` or `USR2`.\n\nOutput: `USR1 handled a`, `USR2 handled b` (how many times each handler ran), then `pending: ...`: the signals still waiting at the end (USR1 before USR2), or `pending: none`.\n\nRemember from the lesson: a blocked signal raised several times is still delivered only **once**.",
+  "starter": "#include <stdio.h>\n#include <signal.h>\n#include <string.h>\n\nint main(void) {\n    int n;\n    scanf(\"%d\", &n);\n    for (int i = 0; i < n; i++) {\n        char cmd[16], name[16];\n        scanf(\"%15s %15s\", cmd, name);\n    }\n    return 0;\n}\n",
+  "tests": [
+    {
+      "stdin": "3\nraise USR1\nraise USR2\nraise USR1\n",
+      "expected": "USR1 handled 2\nUSR2 handled 1\npending: none\n",
+      "visible": true
+    },
+    {
+      "stdin": "5\nblock USR1\nraise USR1\nraise USR1\nraise USR1\nunblock USR1\n",
+      "expected": "USR1 handled 1\nUSR2 handled 0\npending: none\n",
+      "visible": true
+    },
+    {
+      "stdin": "3\nblock USR2\nraise USR2\nraise USR1\n",
+      "expected": "USR1 handled 1\nUSR2 handled 0\npending: USR2\n",
+      "visible": true
+    },
+    {
+      "stdin": "2\nunblock USR1\nraise USR1\n",
+      "expected": "USR1 handled 1\nUSR2 handled 0\npending: none\n",
+      "visible": false
+    },
+    {
+      "stdin": "6\nblock USR1\nblock USR2\nraise USR2\nraise USR1\nunblock USR2\nraise USR2\n",
+      "expected": "USR1 handled 0\nUSR2 handled 2\npending: USR1\n",
+      "visible": false
+    },
+    {
+      "stdin": "6\nblock USR1\nblock USR1\nraise USR1\nunblock USR1\nunblock USR1\nraise USR1\n",
+      "expected": "USR1 handled 2\nUSR2 handled 0\npending: none\n",
+      "visible": false
+    },
+    {
+      "stdin": "5\nblock USR1\nraise USR1\nblock USR2\nraise USR2\nraise USR2\n",
+      "expected": "USR1 handled 0\nUSR2 handled 0\npending: USR1 USR2\n",
+      "visible": false
+    },
+    {
+      "stdin": "60\nraise USR1\nblock USR2\nraise USR2\nunblock USR2\nblock USR1\nraise USR1\nraise USR2\nunblock USR1\nraise USR1\nblock USR2\nraise USR2\nunblock USR2\nblock USR1\nraise USR1\nraise USR2\nunblock USR1\nraise USR1\nblock USR2\nraise USR2\nunblock USR2\nblock USR1\nraise USR1\nraise USR2\nunblock USR1\nraise USR1\nblock USR2\nraise USR2\nunblock USR2\nblock USR1\nraise USR1\nraise USR2\nunblock USR1\nraise USR1\nblock USR2\nraise USR2\nunblock USR2\nblock USR1\nraise USR1\nraise USR2\nunblock USR1\nraise USR1\nblock USR2\nraise USR2\nunblock USR2\nblock USR1\nraise USR1\nraise USR2\nunblock USR1\nraise USR1\nblock USR2\nraise USR2\nunblock USR2\nblock USR1\nraise USR1\nraise USR2\nunblock USR1\nraise USR1\nblock USR2\nraise USR2\nunblock USR2\n",
+      "expected": "USR1 handled 15\nUSR2 handled 15\npending: none\n",
+      "visible": false
+    }
+  ],
+  "hints": [
+    "Count with one handler for both signals. For each command, build a `sigset_t` holding just that signal: `sigemptyset(&set); sigaddset(&set, sig);`.",
+    "`block X` is `sigprocmask(SIG_BLOCK, &set, NULL)` and `unblock X` is `SIG_UNBLOCK`. If X was pending, its handler runs during that unblock call; you don't need to do anything extra.",
+    "At the end, `sigset_t waiting; sigpending(&waiting);` then `sigismember(&waiting, SIGUSR1)` tells you whether USR1 is still waiting. Print the counts before anything could unblock them."
+  ],
+  "solution": "#include <stdio.h>\n#include <signal.h>\n#include <string.h>\n\nvolatile sig_atomic_t usr1 = 0, usr2 = 0;\n\nvoid on_signal(int sig) {\n    if (sig == SIGUSR1) usr1++;\n    else if (sig == SIGUSR2) usr2++;\n}\n\nint main(void) {\n    signal(SIGUSR1, on_signal);\n    signal(SIGUSR2, on_signal);\n\n    int n;\n    scanf(\"%d\", &n);\n    for (int i = 0; i < n; i++) {\n        char cmd[16], name[16];\n        scanf(\"%15s %15s\", cmd, name);\n        int sig = strcmp(name, \"USR1\") == 0 ? SIGUSR1 : SIGUSR2;\n        sigset_t set;\n        sigemptyset(&set);\n        sigaddset(&set, sig);\n        if (strcmp(cmd, \"raise\") == 0) raise(sig);\n        else if (strcmp(cmd, \"block\") == 0) sigprocmask(SIG_BLOCK, &set, NULL);\n        else sigprocmask(SIG_UNBLOCK, &set, NULL);\n    }\n\n    sigset_t waiting;\n    sigpending(&waiting);\n    printf(\"USR1 handled %d\\nUSR2 handled %d\\n\", (int)usr1, (int)usr2);\n    int p1 = sigismember(&waiting, SIGUSR1), p2 = sigismember(&waiting, SIGUSR2);\n    if (!p1 && !p2) printf(\"pending: none\\n\");\n    else printf(\"pending:%s%s\\n\", p1 ? \" USR1\" : \"\", p2 ? \" USR2\" : \"\");\n    return 0;\n}\n"
+}

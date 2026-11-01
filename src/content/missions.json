@@ -1,0 +1,16 @@
+[
+  { "id": 0, "slug": "boot-sequence", "system": "Boot Sequence", "topic": "Your first C program", "briefing": "The station is dark. One terminal still has power, and it only understands C. Let's get it to say something." },
+  { "id": 1, "slug": "life-support", "system": "Life Support", "topic": "C programming basics", "briefing": "Oxygen readouts are garbage. Variables, types and printf will make them make sense again." },
+  { "id": 2, "slug": "power-grid", "system": "Power Grid", "topic": "Operators", "briefing": "Power has to be split across modules exactly. Arithmetic, remainders and a few traps await." },
+  { "id": 3, "slug": "airlock-security", "system": "Airlock Security", "topic": "Conditional statements", "briefing": "The airlock opens for anyone. Teach it to decide." },
+  { "id": 4, "slug": "engines", "system": "Engines", "topic": "Loops", "briefing": "The engines need a steady pulse. Repetition, without copy-pasting." },
+  { "id": 5, "slug": "repair-drones", "system": "Repair Drones", "topic": "Functions", "briefing": "Build routines the drones can run again and again." },
+  { "id": 6, "slug": "cargo-and-comms", "system": "Cargo & Comms", "topic": "Arrays and strings", "briefing": "The cargo manifest and the comms buffer are both just rows of values. Time to read them." },
+  { "id": 7, "slug": "core-rewiring", "system": "Core Rewiring", "topic": "Pointers and structures", "briefing": "The core's wiring is addresses pointing at addresses. This is the big one." },
+  { "id": 8, "slug": "reactor-leak", "system": "Reactor Leak", "topic": "Memory management", "briefing": "Something keeps taking memory and never giving it back." },
+  { "id": 9, "slug": "black-box", "system": "Black Box", "topic": "File and error handling", "briefing": "The flight recorder is full of logs. Read them, and handle what goes wrong." },
+  { "id": 10, "slug": "universal-translator", "system": "Universal Translator", "topic": "Variadic functions", "briefing": "A function that takes any number of arguments, like printf itself." },
+  { "id": 11, "slug": "alarm-system", "system": "Alarm System", "topic": "Signals", "briefing": "Alarms interrupt whatever you're doing. Learn to catch them." },
+  { "id": 12, "slug": "distress-beacon", "system": "Distress Beacon", "topic": "Socket programming", "briefing": "Two programs talking through a socket. Send the mayday." },
+  { "id": 13, "slug": "drone-swarm", "system": "Drone Swarm", "topic": "Multithreading", "briefing": "Many drones, one job, no collisions. Bring the station fully online." }
+]

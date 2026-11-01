@@ -1,0 +1,42 @@
+/* Palette and type tokens: spec/SUMMARY.md ("Folded from 06 · experience").
+   #337418 (alive-deep) is never used for text: 3.3:1 on bg. */
+:root {
+  --bg: #0f0f0f;
+  --surface: #181a18;
+  --raised: #202020;
+  --line: #2c312c;
+  --text: #f2f2ee;
+  --muted: #9ba39b;
+  --alive: #5dd62c;
+  --alive-deep: #337418;
+  --alive-glow: rgba(93, 214, 44, 0.28);
+  --warn: #f5b83d;
+  --fail: #ff6b5e;
+  --signal: #6cb6ff;
+
+  /* IBM Plex: Sans for headings and body, Mono for code and technical labels (user choice, 2026-11-01). */
+  --font-head: "IBM Plex Sans", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+  --text-body: 17px;
+  --text-small: 14px;
+  --text-h1: clamp(2rem, 1.4rem + 2.4vw, 3.25rem);
+  --text-h2: clamp(1.35rem, 1.1rem + 1vw, 1.75rem);
+
+  --radius-s: 6px;
+  --radius-m: 12px;
+  --radius-l: 20px;
+
+  --gutter: clamp(16px, 4vw, 40px);
+  --content-width: 1080px;
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-fast: 150ms;
+  --dur-normal: 300ms;
+}
+
+:root[data-font-size="large"] {
+  --text-body: 19px;
+  --text-small: 16px;
+}

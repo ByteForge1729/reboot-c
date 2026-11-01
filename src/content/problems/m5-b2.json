@@ -1,0 +1,55 @@
+{
+  "id": "m5-b2",
+  "title": "Fuel Cell Arrangements",
+  "difficulty": "medium",
+  "story": "The drone bay can line up its fuel cells in `n!` (n factorial) different orders: `n × (n − 1) × … × 1`, and `0!` is 1. SIGMA wants the count.\n\nInput: one whole number `n` (0–20).\n\nOutput: `n!`.\n\nExample: `5` prints `120`.\n\nCareful: the answer gets very large very fast.",
+  "starter": "#include <stdio.h>\n\nint main(void) {\n    int n;\n    scanf(\"%d\", &n);\n    // work out n!\n    return 0;\n}\n",
+  "tests": [
+    {
+      "stdin": "5\n",
+      "expected": "120\n",
+      "visible": true
+    },
+    {
+      "stdin": "0\n",
+      "expected": "1\n",
+      "visible": true
+    },
+    {
+      "stdin": "1\n",
+      "expected": "1\n",
+      "visible": true
+    },
+    {
+      "stdin": "10\n",
+      "expected": "3628800\n",
+      "visible": false
+    },
+    {
+      "stdin": "20\n",
+      "expected": "2432902008176640000\n",
+      "visible": false
+    },
+    {
+      "stdin": "12\n",
+      "expected": "479001600\n",
+      "visible": false
+    },
+    {
+      "stdin": "13\n",
+      "expected": "6227020800\n",
+      "visible": false
+    },
+    {
+      "stdin": "3\n",
+      "expected": "6\n",
+      "visible": false
+    }
+  ],
+  "hints": [
+    "Multiply 1 × 2 × … × n in a loop, or recursively: `n! = n × (n − 1)!` with `0! = 1`.",
+    "An `int` only goes up to about 2 billion; 13! is over 6 billion. Hidden tests go up to 20!.",
+    "Use `long long` for the result and print it with `%lld`."
+  ],
+  "solution": "#include <stdio.h>\n\nlong long factorial(int n) {\n    if (n <= 1) return 1;\n    return n * factorial(n - 1);\n}\n\nint main(void) {\n    int n;\n    scanf(\"%d\", &n);\n    printf(\"%lld\\n\", factorial(n));\n    return 0;\n}\n"
+}

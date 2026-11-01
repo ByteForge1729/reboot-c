@@ -1,0 +1,64 @@
+{
+  "id": "m9-b3",
+  "title": "Black Box Recovery",
+  "difficulty": "hard",
+  "story": "After the crash, some of the black box's files survived and some didn't. Check each one the rescue team asks about.\n\nInput: `n` (1–20), then n file names. The judge puts the surviving files next to your program; the others simply don't exist.\n\nOutput, one line per name in order:\n- `NAME: missing` if it can't be opened,\n- otherwise `NAME: L lines, W words`.\n\nThen a last line `found F of N files`.\n\nA **line** ends with a newline; a last line without one still counts (an empty file has 0 lines). A **word** is a run of characters that aren't spaces, tabs or newlines. Watch out: some lines are very long.",
+  "starter": "#include <stdio.h>\n#include <ctype.h>\n\nint main(void) {\n    int n;\n    scanf(\"%d\", &n);\n    for (int i = 0; i < n; i++) {\n        char name[64];\n        scanf(\"%63s\", name);\n        // open it, or report it missing\n    }\n    return 0;\n}\n",
+  "tests": [
+    {
+      "stdin": "2\nalpha.log beta.log\n",
+      "expected": "alpha.log: 2 lines, 4 words\nbeta.log: missing\nfound 1 of 2 files\n",
+      "visible": true,
+      "files": {
+        "alpha.log": "hull ok\nfans on\n"
+      }
+    },
+    {
+      "stdin": "1\nempty.txt\n",
+      "expected": "empty.txt: 0 lines, 0 words\nfound 1 of 1 files\n",
+      "visible": true,
+      "files": {
+        "empty.txt": ""
+      }
+    },
+    {
+      "stdin": "1\nnotes.txt\n",
+      "expected": "notes.txt: 1 lines, 5 words\nfound 1 of 1 files\n",
+      "visible": true,
+      "files": {
+        "notes.txt": "no newline at the end"
+      }
+    },
+    {
+      "stdin": "3\na.txt b.txt a.txt\n",
+      "expected": "a.txt: 2 lines, 3 words\nb.txt: missing\na.txt: 2 lines, 3 words\nfound 2 of 3 files\n",
+      "visible": false,
+      "files": {
+        "a.txt": "  spaced   out\twords \n\n"
+      }
+    },
+    {
+      "stdin": "2\nlong.log gone.log\n",
+      "expected": "long.log: 3 lines, 121 words\ngone.log: missing\nfound 1 of 2 files\n",
+      "visible": false,
+      "files": {
+        "long.log": "cell0 cell1 cell2 cell3 cell4 cell5 cell6 cell7 cell8 cell9 cell10 cell11 cell12 cell13 cell14 cell15 cell16 cell17 cell18 cell19 cell20 cell21 cell22 cell23 cell24 cell25 cell26 cell27 cell28 cell29 cell30 cell31 cell32 cell33 cell34 cell35 cell36 cell37 cell38 cell39 cell40 cell41 cell42 cell43 cell44 cell45 cell46 cell47 cell48 cell49 cell50 cell51 cell52 cell53 cell54 cell55 cell56 cell57 cell58 cell59\ncell0 cell1 cell2 cell3 cell4 cell5 cell6 cell7 cell8 cell9 cell10 cell11 cell12 cell13 cell14 cell15 cell16 cell17 cell18 cell19 cell20 cell21 cell22 cell23 cell24 cell25 cell26 cell27 cell28 cell29 cell30 cell31 cell32 cell33 cell34 cell35 cell36 cell37 cell38 cell39 cell40 cell41 cell42 cell43 cell44 cell45 cell46 cell47 cell48 cell49 cell50 cell51 cell52 cell53 cell54 cell55 cell56 cell57 cell58 cell59\nend\n"
+      }
+    },
+    {
+      "stdin": "4\nw x y z\n",
+      "expected": "w: missing\nx: 3 lines, 3 words\ny: missing\nz: 3 lines, 0 words\nfound 2 of 4 files\n",
+      "visible": false,
+      "files": {
+        "x": "1\n2\n3",
+        "z": "\n\n\n"
+      }
+    }
+  ],
+  "hints": [
+    "fopen each name in turn; NULL means missing. Count how many opened for the last line, and fclose every file you opened.",
+    "Reading lines with a small fgets buffer miscounts the very long lines. Reading one character at a time with `int c = fgetc(f)` until `c == EOF` avoids buffers completely.",
+    "Count `\\n` characters for lines, plus one if the file didn't end with `\\n` (remember the last character you saw). A word starts whenever a non-space character follows a space or the start of the file: `isspace(c)` checks for space, tab and newline."
+  ],
+  "solution": "#include <stdio.h>\n#include <ctype.h>\n\nint main(void) {\n    int n, found = 0;\n    scanf(\"%d\", &n);\n    for (int i = 0; i < n; i++) {\n        char name[64];\n        scanf(\"%63s\", name);\n        FILE *f = fopen(name, \"r\");\n        if (f == NULL) {\n            printf(\"%s: missing\\n\", name);\n            continue;\n        }\n        found++;\n        int c, last = '\\n', lines = 0, words = 0, in_word = 0;\n        while ((c = fgetc(f)) != EOF) {\n            if (c == '\\n') lines++;\n            if (isspace(c)) {\n                in_word = 0;\n            } else if (!in_word) {\n                in_word = 1;\n                words++;\n            }\n            last = c;\n        }\n        if (last != '\\n') lines++;\n        fclose(f);\n        printf(\"%s: %d lines, %d words\\n\", name, lines, words);\n    }\n    printf(\"found %d of %d files\\n\", found, n);\n    return 0;\n}\n"
+}

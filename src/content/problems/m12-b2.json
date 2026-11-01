@@ -1,0 +1,50 @@
+{
+  "id": "m12-b2",
+  "title": "Word Relay",
+  "difficulty": "medium",
+  "story": "Messages now need clear edges, so every one is **framed**: an `int` length, then that many bytes. `send_msg` is written for you.\n\nThe station sends n words, one frame each, then shuts down its sending side. The beacon replies with **one** frame: the words in reverse order, separated by single spaces (empty if there were no words).\n\nWrite `recv_msg(fd, buf, room)`: read one frame into buf as a string and return its length, or -1 if the line closed instead. Then write `serve`. The station uses your recv_msg too.\n\nInput: `n` (0–50), then n words of up to 20 characters.\n\nOutput: `relay: [` the reply `]`.\n\nExample: `3 sos red now` prints `relay: [now red sos]`.",
+  "starter": "#include <stdio.h>\n#include <string.h>\n#include <sys/socket.h>\n#include <sys/wait.h>\n#include <unistd.h>\n\n// Every message is framed: an int length, then that many bytes.\nvoid send_msg(int fd, const char *text) {\n    int len = (int)strlen(text);\n    send(fd, &len, sizeof len, 0);\n    send(fd, text, len, 0);\n}\n\n// Read one frame into buf as a '\\0'-terminated string. Return its length, or -1 if the line closed.\nint recv_msg(int fd, char *buf, int room) {\n    return -1;\n}\n\n// The beacon: collect the words, reply with one frame of them in reverse order.\nvoid serve(int fd) {\n}\n\nint main(void) {\n    int fds[2];\n    if (socketpair(AF_UNIX, SOCK_STREAM, 0, fds) == -1) {\n        perror(\"socketpair\");\n        return 1;\n    }\n    pid_t pid = fork();\n    if (pid == -1) {\n        perror(\"fork\");\n        return 1;\n    }\n    if (pid == 0) {\n        close(fds[0]);\n        serve(fds[1]);\n        close(fds[1]);\n        _exit(0);\n    }\n    close(fds[1]);\n\n    int n;\n    scanf(\"%d\", &n);\n    for (int i = 0; i < n; i++) {\n        char word[32];\n        scanf(\"%31s\", word);\n        send_msg(fds[0], word);\n    }\n    shutdown(fds[0], SHUT_WR);\n\n    char reply[2048];\n    if (recv_msg(fds[0], reply, sizeof reply) < 0) strcpy(reply, \"(no reply)\");\n    waitpid(pid, NULL, 0);\n    printf(\"relay: [%s]\\n\", reply);\n    close(fds[0]);\n    return 0;\n}\n",
+  "tests": [
+    {
+      "stdin": "3\nsos red now\n",
+      "expected": "relay: [now red sos]\n",
+      "visible": true
+    },
+    {
+      "stdin": "1\nbeacon\n",
+      "expected": "relay: [beacon]\n",
+      "visible": true
+    },
+    {
+      "stdin": "0\n",
+      "expected": "relay: []\n",
+      "visible": true
+    },
+    {
+      "stdin": "4\na bb ccc dddd\n",
+      "expected": "relay: [dddd ccc bb a]\n",
+      "visible": false
+    },
+    {
+      "stdin": "2\nhello hello\n",
+      "expected": "relay: [hello hello]\n",
+      "visible": false
+    },
+    {
+      "stdin": "6\nthe station is back online now\n",
+      "expected": "relay: [now online back is station the]\n",
+      "visible": false
+    },
+    {
+      "stdin": "50\nw0 w1 w2 w3 w4 w5 w6 w7 w8 w9 w10 w11 w12 w13 w14 w15 w16 w17 w18 w19 w20 w21 w22 w23 w24 w25 w26 w27 w28 w29 w30 w31 w32 w33 w34 w35 w36 w37 w38 w39 w40 w41 w42 w43 w44 w45 w46 w47 w48 w49\n",
+      "expected": "relay: [w49 w48 w47 w46 w45 w44 w43 w42 w41 w40 w39 w38 w37 w36 w35 w34 w33 w32 w31 w30 w29 w28 w27 w26 w25 w24 w23 w22 w21 w20 w19 w18 w17 w16 w15 w14 w13 w12 w11 w10 w9 w8 w7 w6 w5 w4 w3 w2 w1 w0]\n",
+      "visible": false
+    }
+  ],
+  "hints": [
+    "recv_msg: first `recv(fd, &len, sizeof len, MSG_WAITALL)`. If that doesn't return `sizeof len`, the line closed: return -1. Then recv exactly `len` bytes (MSG_WAITALL again) and put `'\\0'` at `buf[len]`.",
+    "serve: store the words as they arrive, e.g. in `char words[50][32]`, looping while recv_msg returns ≥ 0.",
+    "Build the reply backwards: start with an empty string and strcat the words from last to first, with a space before every word except the first one you add. Then `send_msg(fd, reply)`, even when it's empty."
+  ],
+  "solution": "#include <stdio.h>\n#include <string.h>\n#include <sys/socket.h>\n#include <sys/wait.h>\n#include <unistd.h>\n\n// Every message is framed: an int length, then that many bytes.\nvoid send_msg(int fd, const char *text) {\n    int len = (int)strlen(text);\n    send(fd, &len, sizeof len, 0);\n    send(fd, text, len, 0);\n}\n\nint recv_msg(int fd, char *buf, int room) {\n    int len;\n    if (recv(fd, &len, sizeof len, MSG_WAITALL) != sizeof len) return -1;\n    if (len < 0 || len >= room) return -1;\n    if (len > 0 && recv(fd, buf, len, MSG_WAITALL) != len) return -1;\n    buf[len] = '\\0';\n    return len;\n}\n\nvoid serve(int fd) {\n    char words[50][32];\n    int count = 0;\n    while (count < 50 && recv_msg(fd, words[count], sizeof words[count]) >= 0) count++;\n\n    char reply[2048] = \"\";\n    for (int i = count - 1; i >= 0; i--) {\n        if (i < count - 1) strcat(reply, \" \");\n        strcat(reply, words[i]);\n    }\n    send_msg(fd, reply);\n}\n\nint main(void) {\n    int fds[2];\n    if (socketpair(AF_UNIX, SOCK_STREAM, 0, fds) == -1) {\n        perror(\"socketpair\");\n        return 1;\n    }\n    pid_t pid = fork();\n    if (pid == -1) {\n        perror(\"fork\");\n        return 1;\n    }\n    if (pid == 0) {\n        close(fds[0]);\n        serve(fds[1]);\n        close(fds[1]);\n        _exit(0);\n    }\n    close(fds[1]);\n\n    int n;\n    scanf(\"%d\", &n);\n    for (int i = 0; i < n; i++) {\n        char word[32];\n        scanf(\"%31s\", word);\n        send_msg(fds[0], word);\n    }\n    shutdown(fds[0], SHUT_WR);\n\n    char reply[2048];\n    if (recv_msg(fds[0], reply, sizeof reply) < 0) strcpy(reply, \"(no reply)\");\n    waitpid(pid, NULL, 0);\n    printf(\"relay: [%s]\\n\", reply);\n    close(fds[0]);\n    return 0;\n}\n"
+}

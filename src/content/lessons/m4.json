@@ -1,0 +1,232 @@
+{
+  "missionId": 4,
+  "cheatsheet": "**while**\n`while (cond) { ... }` repeats while cond is true. Something inside must change, or it never ends.\n\n**for**\n`for (int i = 0; i < n; i++) { ... }` = start; keep going while; after each round.\n\n**do / while**\n`do { ... } while (cond);` always runs at least once.\n\n**Exits**\n`break` leaves the loop now · `continue` skips to the next round\n\n**Nested**\nThe inner loop runs all the way through for every round of the outer one.",
+  "lessons": [
+    {
+      "id": "m4-l1",
+      "title": "Doing it again: while",
+      "concept": "A **loop** repeats a block. `while (condition) { ... }` checks the condition, runs the block, checks again, and stops the first time the condition is false.\n\nSomething inside the loop must move it towards stopping, usually a counter like `pulse++`. Forget that and the loop runs forever. The judge stops it after 2 seconds and tells you so.",
+      "example": {
+        "source": "#include <stdio.h>\n\nint main(void) {\n    int pulse = 1;\n    while (pulse <= 3) {\n        printf(\"Pulse %d\\n\", pulse);\n        pulse++;\n    }\n    printf(\"Engines warm\\n\");\n    return 0;\n}\n"
+      },
+      "predict": {
+        "id": "m4-p1",
+        "kind": "predict",
+        "prompt": "Before you run it: type what it prints.",
+        "code": "#include <stdio.h>\n\nint main(void) {\n    int pulse = 1;\n    while (pulse <= 3) {\n        printf(\"Pulse %d\\n\", pulse);\n        pulse++;\n    }\n    printf(\"Engines warm\\n\");\n    return 0;\n}\n",
+        "answer": "Pulse 1\nPulse 2\nPulse 3\nEngines warm\n",
+        "explain": "pulse goes 1, 2, 3. At 4 the condition is false, the loop ends, and the last printf runs once.",
+        "warmupEligible": false
+      },
+      "drills": [
+        {
+          "id": "m4-d1",
+          "kind": "predict",
+          "prompt": "What does this print?",
+          "code": "int n = 10;\nwhile (n > 0) {\n    n -= 3;\n}\nprintf(\"%d\\n\", n);",
+          "options": ["-2", "1", "0", "-3"],
+          "answer": "-2",
+          "explain": "10 → 7 → 4 → 1 → -2. Only at -2 is `n > 0` false."
+        },
+        {
+          "id": "m4-d2",
+          "kind": "fill",
+          "prompt": "Make it print 3, 2, 1 and then stop (no 0).",
+          "code": "int t = 3;\nwhile (t ___ 0) {\n    printf(\"%d\\n\", t);\n    t--;\n}",
+          "blanks": [[">", "!="]],
+          "explain": "`t > 0` stops before printing 0. (`>=` would print 0 too.)"
+        },
+        {
+          "id": "m4-d3",
+          "kind": "fix",
+          "prompt": "It should add up 1 + 2 + … + n, but the judge says it takes forever. Fix it.",
+          "code": "#include <stdio.h>\n\nint main(void) {\n    int n;\n    scanf(\"%d\", &n);\n    int i = 1, sum = 0;\n    while (i <= n) {\n        sum += i;\n    }\n    printf(\"%d\\n\", sum);\n    return 0;\n}\n",
+          "tests": [
+            { "stdin": "4\n", "expected": "10\n", "visible": true },
+            { "stdin": "1\n", "expected": "1\n", "visible": true }
+          ],
+          "solution": "#include <stdio.h>\n\nint main(void) {\n    int n;\n    scanf(\"%d\", &n);\n    int i = 1, sum = 0;\n    while (i <= n) {\n        sum += i;\n        i++;\n    }\n    printf(\"%d\\n\", sum);\n    return 0;\n}\n",
+          "explain": "Nothing changed `i`, so `i <= n` stayed true forever. `i++` inside the loop moves it on."
+        },
+        {
+          "id": "m4-d4",
+          "kind": "write",
+          "prompt": "Read a number N and print the numbers from N down to 1, one per line.",
+          "code": "#include <stdio.h>\n\nint main(void) {\n    \n    return 0;\n}\n",
+          "tests": [
+            { "stdin": "3\n", "expected": "3\n2\n1\n", "visible": true },
+            { "stdin": "1\n", "expected": "1\n", "visible": true },
+            { "stdin": "5\n", "expected": "5\n4\n3\n2\n1\n", "visible": false }
+          ],
+          "solution": "#include <stdio.h>\n\nint main(void) {\n    int n;\n    scanf(\"%d\", &n);\n    while (n >= 1) {\n        printf(\"%d\\n\", n);\n        n--;\n    }\n    return 0;\n}\n",
+          "explain": "Start at N, print, subtract one, and keep going while it's at least 1."
+        }
+      ]
+    },
+    {
+      "id": "m4-l2",
+      "title": "for loops and do / while",
+      "concept": "Most loops count, so C packs the counting into one line:\n\n`for (int i = 0; i < 4; i++) { ... }`\n\nThat's **start** (`i = 0`), **keep going while** (`i < 4`), **after each round** (`i++`). It runs for i = 0, 1, 2, 3.\n\n`do { ... } while (cond);` checks at the end instead, so the block always runs **at least once**.",
+      "example": {
+        "source": "#include <stdio.h>\n\nint main(void) {\n    for (int i = 0; i < 4; i++) {\n        printf(\"%d \", i * i);\n    }\n    printf(\"\\n\");\n    int tries = 0;\n    do {\n        tries++;\n    } while (tries < 0);\n    printf(\"tries: %d\\n\", tries);\n    return 0;\n}\n"
+      },
+      "predict": {
+        "id": "m4-p2",
+        "kind": "predict",
+        "prompt": "Before you run it: type what it prints.",
+        "code": "#include <stdio.h>\n\nint main(void) {\n    for (int i = 0; i < 4; i++) {\n        printf(\"%d \", i * i);\n    }\n    printf(\"\\n\");\n    int tries = 0;\n    do {\n        tries++;\n    } while (tries < 0);\n    printf(\"tries: %d\\n\", tries);\n    return 0;\n}\n",
+        "answer": "0 1 4 9\ntries: 1\n",
+        "explain": "i goes 0 to 3, printing its square. The do-loop body runs once before `tries < 0` is even checked.",
+        "warmupEligible": false
+      },
+      "drills": [
+        {
+          "id": "m4-d5",
+          "kind": "predict",
+          "prompt": "What does this print?",
+          "code": "for (int i = 1; i <= 10; i += 3) {\n    printf(\"%d \", i);\n}",
+          "options": ["1 4 7 10", "1 4 7", "1 3 6 9", "1 4 7 10 13"],
+          "answer": "1 4 7 10",
+          "explain": "Steps of 3 from 1: 1, 4, 7, 10. 13 is past 10, so it stops."
+        },
+        {
+          "id": "m4-d6",
+          "kind": "predict",
+          "prompt": "Type what this prints.",
+          "code": "int k = 5;\ndo {\n    printf(\"%d\\n\", k);\n    k++;\n} while (k < 3);",
+          "answer": "5\n",
+          "explain": "The body runs once before the check. Then 6 < 3 is false, so it stops."
+        },
+        {
+          "id": "m4-d7",
+          "kind": "parsons",
+          "prompt": "Order and indent the lines so it adds 1 to 5 and prints `15`.",
+          "lines": [
+            { "text": "int sum = 0;", "indent": 0 },
+            { "text": "for (int i = 1; i <= 5; i++) {", "indent": 0 },
+            { "text": "sum += i;", "indent": 1 },
+            { "text": "}", "indent": 0 },
+            { "text": "printf(\"%d\\n\", sum);", "indent": 0 }
+          ],
+          "explain": "Make the total before the loop, add inside it, print after it. Printing inside would print 5 times."
+        },
+        {
+          "id": "m4-d8",
+          "kind": "write",
+          "prompt": "Read N and print the sum of the even numbers from 1 to N. For `10` that's 2 + 4 + 6 + 8 + 10 = `30`.",
+          "code": "#include <stdio.h>\n\nint main(void) {\n    \n    return 0;\n}\n",
+          "tests": [
+            { "stdin": "10\n", "expected": "30\n", "visible": true },
+            { "stdin": "1\n", "expected": "0\n", "visible": true },
+            { "stdin": "7\n", "expected": "12\n", "visible": false },
+            { "stdin": "100\n", "expected": "2550\n", "visible": false },
+            { "stdin": "2\n", "expected": "2\n", "visible": false }
+          ],
+          "solution": "#include <stdio.h>\n\nint main(void) {\n    int n, sum = 0;\n    scanf(\"%d\", &n);\n    for (int i = 2; i <= n; i += 2) {\n        sum += i;\n    }\n    printf(\"%d\\n\", sum);\n    return 0;\n}\n",
+          "explain": "Start at 2 and step by 2, or loop over everything and add only when `i % 2 == 0`."
+        }
+      ]
+    },
+    {
+      "id": "m4-l3",
+      "title": "break, continue and loops inside loops",
+      "concept": "`break` leaves the loop immediately. `continue` skips the rest of this round and moves on to the next one.\n\nA loop can sit inside another loop. The **inner loop runs all the way through for every single round** of the outer one, which is how you draw rows and columns.",
+      "example": {
+        "source": "#include <stdio.h>\n\nint main(void) {\n    for (int row = 1; row <= 3; row++) {\n        for (int col = 1; col <= row; col++) {\n            printf(\"*\");\n        }\n        printf(\"\\n\");\n    }\n    return 0;\n}\n"
+      },
+      "predict": {
+        "id": "m4-p3",
+        "kind": "predict",
+        "prompt": "Before you run it: draw what it prints.",
+        "code": "#include <stdio.h>\n\nint main(void) {\n    for (int row = 1; row <= 3; row++) {\n        for (int col = 1; col <= row; col++) {\n            printf(\"*\");\n        }\n        printf(\"\\n\");\n    }\n    return 0;\n}\n",
+        "answer": "*\n**\n***\n",
+        "explain": "Row 1 gets 1 star, row 2 gets 2, row 3 gets 3. The inner loop's limit is the row number.",
+        "warmupEligible": false
+      },
+      "drills": [
+        {
+          "id": "m4-d9",
+          "kind": "predict",
+          "prompt": "Type what this prints.",
+          "code": "for (int i = 1; i <= 10; i++) {\n    if (i % 2 == 0) continue;\n    if (i > 6) break;\n    printf(\"%d \", i);\n}",
+          "answer": "1 3 5\n",
+          "explain": "Even numbers are skipped by `continue`. At 7 the `break` ends the loop."
+        },
+        {
+          "id": "m4-d10",
+          "kind": "predict",
+          "prompt": "What does this print?",
+          "code": "int count = 0;\nfor (int i = 0; i < 3; i++) {\n    for (int j = 0; j < 4; j++) {\n        count++;\n    }\n}\nprintf(\"%d\\n\", count);",
+          "options": ["12", "7", "3", "4"],
+          "answer": "12",
+          "explain": "4 inner rounds for each of 3 outer rounds: 3 × 4."
+        },
+        {
+          "id": "m4-d11",
+          "kind": "fill",
+          "prompt": "Stop scanning as soon as a negative reading appears.",
+          "code": "if (reading < 0) {\n    ___;\n}",
+          "blanks": [["break"]],
+          "explain": "`break;` leaves the loop right away."
+        },
+        {
+          "id": "m4-d12",
+          "kind": "write",
+          "prompt": "Read N and print an N × N square of `#`. For `2`: two lines of `##`.",
+          "code": "#include <stdio.h>\n\nint main(void) {\n    \n    return 0;\n}\n",
+          "tests": [
+            { "stdin": "2\n", "expected": "##\n##\n", "visible": true },
+            { "stdin": "1\n", "expected": "#\n", "visible": true },
+            { "stdin": "3\n", "expected": "###\n###\n###\n", "visible": false }
+          ],
+          "solution": "#include <stdio.h>\n\nint main(void) {\n    int n;\n    scanf(\"%d\", &n);\n    for (int r = 0; r < n; r++) {\n        for (int c = 0; c < n; c++) {\n            printf(\"#\");\n        }\n        printf(\"\\n\");\n    }\n    return 0;\n}\n",
+          "explain": "Outer loop for rows, inner loop for the `#`s in a row, and a new line after each row."
+        }
+      ]
+    }
+  ],
+  "checkpoint": [
+    {
+      "id": "m4-cp1",
+      "kind": "predict",
+      "prompt": "What does this print?",
+      "code": "int i = 0;\nwhile (i < 3) {\n    i++;\n}\nprintf(\"%d\\n\", i);",
+      "options": ["3", "2", "4", "0"],
+      "answer": "3",
+      "explain": "The loop stops when i reaches 3, and i keeps that value."
+    },
+    {
+      "id": "m4-cp2",
+      "kind": "predict",
+      "prompt": "Type what this prints.",
+      "code": "for (int i = 3; i > 0; i--) {\n    printf(\"%d\", i);\n}\nprintf(\"\\n\");",
+      "answer": "321\n",
+      "explain": "Counts down 3, 2, 1 with no spaces."
+    },
+    {
+      "id": "m4-cp3",
+      "kind": "fill",
+      "prompt": "Run exactly 5 times, with i = 0, 1, 2, 3, 4.",
+      "code": "for (int i = 0; i ___ 5; i++) { ... }",
+      "blanks": [["<", "!="]],
+      "explain": "`i < 5` stops before 5."
+    },
+    {
+      "id": "m4-cp4",
+      "kind": "predict",
+      "prompt": "What does this print?",
+      "code": "int x = 10;\ndo {\n    x++;\n} while (x < 5);\nprintf(\"%d\\n\", x);",
+      "options": ["11", "10", "5", "6"],
+      "answer": "11",
+      "explain": "A do-loop runs once before checking, so x becomes 11."
+    },
+    {
+      "id": "m4-cp5",
+      "kind": "predict",
+      "prompt": "Type what this prints.",
+      "code": "for (int a = 1; a <= 2; a++) {\n    for (int b = 1; b <= 2; b++) {\n        printf(\"%d%d\\n\", a, b);\n    }\n}",
+      "answer": "11\n12\n21\n22\n",
+      "explain": "For each a, b runs through 1 and 2."
+    }
+  ]
+}

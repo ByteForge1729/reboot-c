@@ -1,0 +1,23 @@
+{
+  "id": "m1-b1",
+  "title": "Oxygen Readout",
+  "difficulty": "easy",
+  "story": "The oxygen gauge shows raw litres, and nobody can read it. SIGMA wants a percentage.\n\nInput: two integers `L` and `C` on one line: litres left in the tank and the tank's capacity. `0 ≤ L ≤ C` and `1 ≤ C ≤ 100000`.\n\nOutput: `O2: P%` where `P` is `L` as a percentage of `C`, rounded down to a whole number.\n\nExample: input `42 100` prints `O2: 42%`.",
+  "starter": "#include <stdio.h>\n\nint main(void) {\n    int litres, capacity;\n    scanf(\"%d %d\", &litres, &capacity);\n    // work out the percentage and print it\n    return 0;\n}\n",
+  "tests": [
+    { "stdin": "42 100\n", "expected": "O2: 42%\n", "visible": true },
+    { "stdin": "1 3\n", "expected": "O2: 33%\n", "visible": true },
+    { "stdin": "750 1000\n", "expected": "O2: 75%\n", "visible": true },
+    { "stdin": "0 50\n", "expected": "O2: 0%\n", "visible": false },
+    { "stdin": "100000 100000\n", "expected": "O2: 100%\n", "visible": false },
+    { "stdin": "2 3\n", "expected": "O2: 66%\n", "visible": false },
+    { "stdin": "99999 100000\n", "expected": "O2: 99%\n", "visible": false },
+    { "stdin": "7 7\n", "expected": "O2: 100%\n", "visible": false }
+  ],
+  "hints": [
+    "A percentage is part × 100 ÷ whole.",
+    "In C, `1 / 3` is `0`: dividing two ints throws away the fraction. Try the order of operations on `1 3` by hand.",
+    "Multiply first, then divide: `litres * 100 / capacity`. To print a real `%` sign, write `%%` inside printf."
+  ],
+  "solution": "#include <stdio.h>\n\nint main(void) {\n    int litres, capacity;\n    scanf(\"%d %d\", &litres, &capacity);\n    printf(\"O2: %d%%\\n\", litres * 100 / capacity);\n    return 0;\n}\n"
+}
