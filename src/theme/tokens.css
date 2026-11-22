@@ -1,18 +1,24 @@
-/* Palette and type tokens: spec/SUMMARY.md ("Folded from 06 · experience").
-   #337418 (alive-deep) is never used for text: 3.3:1 on bg. */
+/* Palette: theme-factory "Sunset Boulevard" (user choice, 2026-11-22). Contrast on --bg (WCAG):
+   text 12.2, muted 6.8, accent-soft 6.5, alive 7.9, warn 8.0, fail 6.2, signal 7.5.
+   --accent (burnt orange) is 4.3:1, so it fills buttons, borders and large type only; small accent text uses --accent-soft.
+   --alive stays the "passed / restored" colour, a teal-mint, so success never looks like the orange brand or the rose fail. */
 :root {
-  --bg: #0f0f0f;
-  --surface: #181a18;
-  --raised: #202020;
-  --line: #2c312c;
-  --text: #f2f2ee;
-  --muted: #9ba39b;
-  --alive: #5dd62c;
-  --alive-deep: #337418;
-  --alive-glow: rgba(93, 214, 44, 0.28);
-  --warn: #f5b83d;
-  --fail: #ff6b5e;
-  --signal: #6cb6ff;
+  --bg: #1a323b;
+  --surface: #213e49;
+  --raised: #264653;
+  --line: #36606e;
+  --text: #fbf3e4;
+  --muted: #a9bdbd;
+  --accent: #e76f51;
+  --accent-soft: #f4a261;
+  --accent-glow: rgba(231, 111, 81, 0.3);
+  --on-accent: #13262d;
+  --alive: #7fd6c2;
+  --alive-deep: #2a9d8f;
+  --alive-glow: rgba(127, 214, 194, 0.25);
+  --warn: #e9c46a;
+  --fail: #ff8fa3;
+  --signal: #8ecae6;
 
   /* IBM Plex: Sans for headings and body, Mono for code and technical labels (user choice, 2026-11-01). */
   --font-head: "IBM Plex Sans", system-ui, sans-serif;
